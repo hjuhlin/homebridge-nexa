@@ -1,5 +1,5 @@
 {
-  "pluginAlias": "ExampleHomebridgePlugin",
+  "pluginAlias": "NexaBridgeX",
   "pluginType": "platform",
   "singular": true,
   "schema": {
@@ -9,7 +9,30 @@
         "title": "Name",
         "type": "string",
         "required": true,
-        "default": "Example Dynamic Platform"
+        "default": "Nexa Bridge X"
+      },
+      "username": {
+        "title": "User name (nexa is default API user)",
+        "type": "string",
+        "required": true,
+        "default": "nexa"
+      },
+      "password": {
+        "title": "Password (nexa is default API password)",
+        "type": "string",
+        "required": true,
+        "default": "nexa"
+      },
+      "ip": {
+        "title": "IP-adress to Nexa Bridge X",
+        "type": "string",
+        "required": true
+      },
+      "UpdateTime": {
+        "title": "Time in secondes between updates",
+        "type": "number",
+        "required": true,
+        "default": 60
       }
     }
   }
