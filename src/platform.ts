@@ -8,6 +8,7 @@ import { NexaObject } from './types/NexaObject';
 import { TwilightAccessory } from './accessories/TwilightAccessory';
 import { ContactAccessory } from './accessories/ContactAccessory';
 import { SwitchLevelAccessory } from './accessories/SwitchLevelAccessory';
+import { MotionAccessory } from './accessories/MotionAccessory';
 
 export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
   public readonly Service: typeof Service = this.api.hap.Service;
@@ -69,19 +70,26 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
               }
 
               if (device.capabilities[0] === 'switchLevel') { 
-                const service = existingAccessory.getService(this.Service.Switch);
+                const service = existingAccessory.getService(this.Service.Lightbulb);
                 if (service!==undefined) {
                   const Brightness = device.lastEvents.switchLevel.value*100;
 
                   service.setCharacteristic(this.Characteristic.Brightness, Brightness);
                 }
               }
+
+              if (device.capabilities[0] === 'notificationMotion') { 
+                const service = existingAccessory.getService(this.Service.MotionSensor);
+                if (service!==undefined) {
+                  const HaveMotion = device.lastEvents.notificationMotion.value;
+
+                  service.setCharacteristic(this.Characteristic.MotionDetected, HaveMotion);
+                }
+              }
             }
           }
         });
       });
-
-      this.log.info('Updating from Nexa API');
     }, (this.config['UpdateTime'] as number) * 1000);
       
   }
@@ -127,6 +135,11 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
                 new SwitchLevelAccessory(this, existingAccessory, device, this.config, this.log);
                 this.api.updatePlatformAccessories([existingAccessory]);
               }
+
+              if (device.capabilities[0] === 'notificationMotion') { 
+                new MotionAccessory(this, existingAccessory, device, this.config, this.log);
+                this.api.updatePlatformAccessories([existingAccessory]);
+              }
             } else if (!device) {
               this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [existingAccessory]);
               this.log.info('Removing existing accessory:', existingAccessory.displayName);
@@ -160,6 +173,13 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
               this.log.info('Adding new accessory:', device.name);
 
               new SwitchLevelAccessory(this, accessory, device, this.config, this.log);
+              this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
+            }
+
+            if (device.capabilities[0] === 'notificationMotion') { 
+              this.log.info('Adding new accessory:', device.name);
+
+              new MotionAccessory(this, accessory, device, this.config, this.log);
               this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
             }
           }

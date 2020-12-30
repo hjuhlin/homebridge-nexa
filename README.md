@@ -8,16 +8,18 @@ This is a plugin for Nexa Bridge X (1.7 and forward).
 
 # Support for
 1.0.0
-* Switches (Plug-in PÅ/AV)
+* Switches
 * Virtual Switches
-* Magnetic contact (Magnetkontakt)
-* Twilight relay (Skymningsrelä) - 1 = night, 100 = day. 
+* Magnetic contact
+* Twilight relay - 1 = night, 100 = day. 
 
-1.1.2
+1.1.0
 * Switches with dimmer
 
+1.2.0
+* Motion detector
 
-Add issues for items you want support for
+Add issue for other devices/accessories you want support for
 
 # Default config
 ```json
@@ -27,7 +29,7 @@ Add issues for items you want support for
         "username": "nexa",
         "password": "nexa",
         "ip": "192.168.0.X",
-        "UpdateTime": 60,
+        "UpdateTime": 5,
         "platform": "NexaBridgeX"
     }
 ]

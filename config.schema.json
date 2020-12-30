@@ -32,7 +32,7 @@
         "title": "Time in secondes between updates",
         "type": "number",
         "required": true,
-        "default": 60
+        "default": 5
       }
     }
   }
