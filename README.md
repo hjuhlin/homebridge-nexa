@@ -9,10 +9,11 @@ This is a plugin for Nexa Bridge X (1.7 and forward).
 # Support for
 1.0.0
 * Switches (Plug-in PÅ/AV)
+* Virtual Switches
 * Magnetic contact (Magnetkontakt)
-* Twilight relay (skymningsrelä) - 1 = night, 100 = day. 
+* Twilight relay (Skymningsrelä) - 1 = night, 100 = day. 
 
-1.1.1
+1.1.2
 * Switches with dimmer
 
 

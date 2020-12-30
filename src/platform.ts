@@ -35,7 +35,7 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
         (<NexaObject[]>results).forEach(device => {
   
           if (device.name !== undefined) {
-            const uuid = this.api.hap.uuid.generate(device.id.toString());
+            const uuid = this.api.hap.uuid.generate(device.id.toString()+'_'+device.name);
             const existingAccessory = this.accessories.find(accessory => accessory.UUID === uuid);
 
             if (existingAccessory!== undefined) {
@@ -99,7 +99,7 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
       for (const device of (<NexaObject[]>results)) {
         if (device.name !== undefined) {
 
-          const uuid = this.api.hap.uuid.generate(device.id.toString());
+          const uuid = this.api.hap.uuid.generate(device.id.toString()+'_'+device.name);
           const existingAccessory = this.accessories.find(accessory => accessory.UUID === uuid);
   
           if (existingAccessory) {
@@ -170,7 +170,7 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
         let found = false;
 
         for (const device of (<NexaObject[]>results)) {
-          if (accessory.UUID === this.api.hap.uuid.generate(device.id.toString())) {
+          if (accessory.UUID === this.api.hap.uuid.generate(device.id.toString()+'_'+device.name)) {
             found = true;
           }
         }
