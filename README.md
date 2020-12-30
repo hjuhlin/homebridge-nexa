@@ -17,7 +17,10 @@ This is a plugin for Nexa Bridge X (1.7 and forward).
 * Switches with dimmer
 
 1.2.0
-* Motion detector
+* Motion detectors
+
+1.3.0
+* Remote controls
 
 Add issue for other devices/accessories you want support for
 

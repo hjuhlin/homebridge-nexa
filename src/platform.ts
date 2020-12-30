@@ -9,6 +9,7 @@ import { TwilightAccessory } from './accessories/TwilightAccessory';
 import { ContactAccessory } from './accessories/ContactAccessory';
 import { SwitchLevelAccessory } from './accessories/SwitchLevelAccessory';
 import { MotionAccessory } from './accessories/MotionAccessory';
+import { ButtonAccessory } from './accessories/ButtonAccessory';
 
 export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
   public readonly Service: typeof Service = this.api.hap.Service;
@@ -86,6 +87,15 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
                   service.setCharacteristic(this.Characteristic.MotionDetected, HaveMotion);
                 }
               }
+
+              if (device.capabilities[0] === 'notificationButton') { 
+                const service = existingAccessory.getService(this.Service.Switch);
+                if (service!==undefined) {
+                  const IsOn = device.lastEvents.notificationButton.value;
+
+                  service.setCharacteristic(this.Characteristic.On, IsOn);
+                }
+              }
             }
           }
         });
@@ -140,6 +150,11 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
                 new MotionAccessory(this, existingAccessory, device, this.config, this.log);
                 this.api.updatePlatformAccessories([existingAccessory]);
               }
+
+              if (device.capabilities[0] === 'notificationButton') { 
+                new ButtonAccessory(this, existingAccessory, device, this.config, this.log);
+                this.api.updatePlatformAccessories([existingAccessory]);
+              }
             } else if (!device) {
               this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [existingAccessory]);
               this.log.info('Removing existing accessory:', existingAccessory.displayName);
@@ -180,6 +195,13 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
               this.log.info('Adding new accessory:', device.name);
 
               new MotionAccessory(this, accessory, device, this.config, this.log);
+              this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
+            }
+
+            if (device.capabilities[0] === 'notificationButton') { 
+              this.log.info('Adding new accessory:', device.name);
+
+              new ButtonAccessory(this, accessory, device, this.config, this.log);
               this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
             }
           }
