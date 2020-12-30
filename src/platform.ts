@@ -7,6 +7,7 @@ import { HttpRequest } from './utils/httprequest.js';
 import { NexaObject } from './types/NexaObject';
 import { TwilightAccessory } from './accessories/TwilightAccessory';
 import { ContactAccessory } from './accessories/ContactAccessory';
+import { SwitchLevelAccessory } from './accessories/SwitchLevelAccessory';
 
 export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
   public readonly Service: typeof Service = this.api.hap.Service;
@@ -66,6 +67,15 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
                   service.setCharacteristic(this.Characteristic.ContactSensorState, IsOpen);
                 }
               }
+
+              if (device.capabilities[0] === 'switchLevel') { 
+                const service = existingAccessory.getService(this.Service.Switch);
+                if (service!==undefined) {
+                  const Brightness = device.lastEvents.switchLevel.value*100;
+
+                  service.setCharacteristic(this.Characteristic.Brightness, Brightness);
+                }
+              }
             }
           }
         });
@@ -112,6 +122,11 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
                 new ContactAccessory(this, existingAccessory, device, this.config, this.log);
                 this.api.updatePlatformAccessories([existingAccessory]);
               }
+
+              if (device.capabilities[0] === 'switchLevel') { 
+                new SwitchLevelAccessory(this, existingAccessory, device, this.config, this.log);
+                this.api.updatePlatformAccessories([existingAccessory]);
+              }
             } else if (!device) {
               this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [existingAccessory]);
               this.log.info('Removing existing accessory:', existingAccessory.displayName);
@@ -140,6 +155,13 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
               new ContactAccessory(this, accessory, device, this.config, this.log);
               this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
             } 
+
+            if (device.capabilities[0] === 'switchLevel') { 
+              this.log.info('Adding new accessory:', device.name);
+
+              new SwitchLevelAccessory(this, accessory, device, this.config, this.log);
+              this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
+            }
           }
         }
       }

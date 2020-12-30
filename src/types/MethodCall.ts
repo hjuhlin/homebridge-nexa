@@ -9,4 +9,5 @@ export interface MethodCall {
     fromWS: boolean;
     time: Date;
     name: string;
+    arguments: number[];
 }

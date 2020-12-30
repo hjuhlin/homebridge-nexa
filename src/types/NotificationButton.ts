@@ -1,4 +1,4 @@
-export interface SwitchBinary {
+export interface NotificationButton {
     value: boolean;
     sourceNode: number;
     fromWS: boolean;
