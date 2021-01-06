@@ -29,7 +29,9 @@ export class SwitchLevelAccessory {
     this.service = this.accessory.getService(this.platform.Service.Lightbulb) || this.accessory.addService(this.platform.Service.Lightbulb);
     this.service.setCharacteristic(this.platform.Characteristic.Name, accessory.context.device.name);
 
-    this.State.Brightness = jsonItem.lastEvents.switchLevel.value;
+    if (jsonItem.lastEvents.switchLevel!==undefined) {
+      this.State.Brightness = jsonItem.lastEvents.switchLevel.value;
+    }
 
     this.service.getCharacteristic(this.platform.Characteristic.On)
       .on('set', this.setOn.bind(this)) 

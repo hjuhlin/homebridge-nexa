@@ -28,7 +28,9 @@ export class TwilightAccessory {
     
     this.service.setCharacteristic(this.platform.Characteristic.Name, accessory.context.device.name);
 
-    this.State.IsNight = jsonItem.lastEvents.notificationTwilight.value;
+    if (jsonItem.lastEvents.notificationTwilight!==undefined) {
+      this.State.IsNight = jsonItem.lastEvents.notificationTwilight.value;
+    }
 
     this.service.getCharacteristic(this.platform.Characteristic.CurrentAmbientLightLevel)
       .on('set', this.setOn.bind(this))

@@ -28,7 +28,9 @@ export class MotionAccessory {
     
     this.service.setCharacteristic(this.platform.Characteristic.Name, accessory.context.device.name);
 
-    this.State.HaveMotion = jsonItem.lastEvents.notificationMotion.value;
+    if (jsonItem.lastEvents.notificationMotion!==undefined) {
+      this.State.HaveMotion = jsonItem.lastEvents.notificationMotion.value;
+    }
 
     this.service.getCharacteristic(this.platform.Characteristic.MotionDetected)
       .on('set', this.setOn.bind(this))

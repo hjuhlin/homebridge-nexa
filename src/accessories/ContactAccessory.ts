@@ -28,7 +28,9 @@ export class ContactAccessory {
     
     this.service.setCharacteristic(this.platform.Characteristic.Name, accessory.context.device.name);
 
-    this.State.IsOpen = jsonItem.lastEvents.notificationContact.value;
+    if (jsonItem.lastEvents.notificationContact!==undefined) {
+      this.State.IsOpen = jsonItem.lastEvents.notificationContact.value;
+    }
 
     this.service.getCharacteristic(this.platform.Characteristic.ContactSensorState)
       .on('set', this.setOn.bind(this))

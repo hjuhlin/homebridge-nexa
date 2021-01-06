@@ -45,7 +45,7 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
               if (device.capabilities[0] === 'switchBinary') {  
                 const service = existingAccessory.getService(this.Service.Switch);
 
-                if (service!==undefined) {
+                if (service!==undefined && device.lastEvents.switchBinary!==undefined) {
                   //Refector this in some way so API isn't called with same data. 
                   const isOn = device.lastEvents.switchBinary.value;
                   service.setCharacteristic(this.Characteristic.On, isOn);
@@ -55,7 +55,7 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
               if (device.capabilities[0] === 'notificationTwilight') {  
                 const service = existingAccessory.getService(this.Service.LightSensor);
 
-                if (service!==undefined) {
+                if (service!==undefined && device.lastEvents.notificationTwilight !== undefined) {
                   const IsNight = device.lastEvents.notificationTwilight.value;
                   service.setCharacteristic(this.Characteristic.CurrentAmbientLightLevel, IsNight ? 1: 100);
                 }
@@ -64,7 +64,7 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
               if (device.capabilities[0] === 'notificationContact') { 
                 const service = existingAccessory.getService(this.Service.ContactSensor);
 
-                if (service!==undefined) {
+                if (service!==undefined && device.lastEvents.notificationContact!==undefined) {
                   const IsOpen = device.lastEvents.notificationContact.value;
                   service.setCharacteristic(this.Characteristic.ContactSensorState, IsOpen);
                 }
@@ -72,7 +72,8 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
 
               if (device.capabilities[0] === 'switchLevel') { 
                 const service = existingAccessory.getService(this.Service.Lightbulb);
-                if (service!==undefined) {
+
+                if (service!==undefined && device.lastEvents.switchLevel!==undefined) {
                   const Brightness = device.lastEvents.switchLevel.value*100;
 
                   service.setCharacteristic(this.Characteristic.Brightness, Brightness);
@@ -81,7 +82,8 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
 
               if (device.capabilities[0] === 'notificationMotion') { 
                 const service = existingAccessory.getService(this.Service.MotionSensor);
-                if (service!==undefined) {
+
+                if (service!==undefined && device.lastEvents.notificationMotion!==undefined) {
                   const HaveMotion = device.lastEvents.notificationMotion.value;
 
                   service.setCharacteristic(this.Characteristic.MotionDetected, HaveMotion);
@@ -90,7 +92,8 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
 
               if (device.capabilities[0] === 'notificationButton') { 
                 const service = existingAccessory.getService(this.Service.Switch);
-                if (service!==undefined) {
+
+                if (service!==undefined && device.lastEvents.notificationButton!==undefined) {
                   const IsOn = device.lastEvents.notificationButton.value;
 
                   service.setCharacteristic(this.Characteristic.On, IsOn);

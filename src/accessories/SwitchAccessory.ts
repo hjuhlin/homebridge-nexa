@@ -28,7 +28,9 @@ export class SwitchAccessory {
     this.service = this.accessory.getService(this.platform.Service.Switch) || this.accessory.addService(this.platform.Service.Switch);
     this.service.setCharacteristic(this.platform.Characteristic.Name, accessory.context.device.name);
 
-    this.State.IsOn = jsonItem.lastEvents.switchBinary.value;
+    if (jsonItem.lastEvents.switchBinary!==undefined) {
+      this.State.IsOn = jsonItem.lastEvents.switchBinary.value;
+    }
 
     this.service.getCharacteristic(this.platform.Characteristic.On)
       .on('set', this.setOn.bind(this))  
