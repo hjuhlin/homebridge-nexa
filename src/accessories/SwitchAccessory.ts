@@ -1,5 +1,5 @@
 import { Service, PlatformAccessory, Logger, PlatformConfig, 
-  CharacteristicValue, CharacteristicSetCallback, CharacteristicGetCallback } from 'homebridge';
+  CharacteristicValue, CharacteristicSetCallback } from 'homebridge';
 
 import { NexaHomebridgePlatform } from '../platform';
 import { NexaObject } from '../types/NexaObject';
@@ -7,10 +7,6 @@ import { HttpRequest } from '../utils/httprequest.js';
 
 export class SwitchAccessory {
   private service: Service;
-
-  private State = {
-    IsOn: false,
-  };
 
   constructor(
     private readonly platform: NexaHomebridgePlatform,
@@ -26,44 +22,30 @@ export class SwitchAccessory {
 
     this.service = this.accessory.getService(this.platform.Service.Switch) || this.accessory.addService(this.platform.Service.Switch);
     this.service.setCharacteristic(this.platform.Characteristic.Name, accessory.context.device.name);
-
+    this.service.setCharacteristic(this.platform.Characteristic.TimeUpdate, false);
+ 
     if (jsonItem.lastEvents.switchBinary!==undefined) {
-      this.State.IsOn = jsonItem.lastEvents.switchBinary.value;
+      const isOn = jsonItem.lastEvents.switchBinary.value;
+      this.service.setCharacteristic(this.platform.Characteristic.On, isOn);
     }
 
     this.service.getCharacteristic(this.platform.Characteristic.On)
-      .on('set', this.setOn.bind(this))  
-      .on('get', this.getOn.bind(this));
+      .on('set', this.setOn.bind(this));  
   }
 
   setOn(value: CharacteristicValue, callback: CharacteristicSetCallback) {
-    if (this.State.IsOn !== value as boolean) {
-      this.State.IsOn = value as boolean;
+    this.service.setCharacteristic(this.platform.Characteristic.TimeUpdate, true);
 
-      const body = {
-        method: value ? 'turnOn' : 'turnOff',
-        cap: 'switchBinary',
-      };
+    const body = {
+      method: value ? 'turnOn' : 'turnOff',
+      cap: 'switchBinary',
+    };
 
-      const httpRequest = new HttpRequest(this.config, this.log);
-
-      httpRequest.Update(this.accessory.context.device.id, body);
-    }
-
-    callback(null);
-  }
-
-  getOn(callback: CharacteristicGetCallback) {
     const httpRequest = new HttpRequest(this.config, this.log);
-
-    httpRequest.GetStatus(this.accessory.context.device.id).then((results)=> {
-      const jsonItem = (<NexaObject>results);
-      
-      if (jsonItem.lastEvents.switchBinary!==undefined) {
-        this.State.IsOn = jsonItem.lastEvents.switchBinary.value;
-      }
+    httpRequest.Update(this.accessory.context.device.id, body).then(()=> {
+      this.service.setCharacteristic(this.platform.Characteristic.TimeUpdate, false);
     });
 
-    callback(null, this.State.IsOn);
+    callback(null, value);
   }
 }

@@ -37,8 +37,7 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
         (<NexaObject[]>results).forEach(device => {
   
           if (device.name !== undefined) {
-            const uuid = this.api.hap.uuid.generate(device.id.toString()+'_'+device.name);
-            const existingAccessory = this.accessories.find(accessory => accessory.UUID === uuid);
+            const existingAccessory = this.accessories.find(accessory => accessory.UUID === this.localId(device));
 
             if (existingAccessory!== undefined) {
             
@@ -46,9 +45,11 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
                 const service = existingAccessory.getService(this.Service.Switch);
 
                 if (service!==undefined && device.lastEvents.switchBinary!==undefined) {
-                  //Refector this in some way so API isn't called with same data. 
                   const isOn = device.lastEvents.switchBinary.value;
-                  service.getCharacteristic(this.Characteristic.On).updateValue(isOn);
+
+                  if (service.getCharacteristic(this.Characteristic.TimeUpdate).value===false) {
+                    service.updateCharacteristic(this.Characteristic.On, isOn);
+                  }
                 }
               }
 
@@ -56,8 +57,8 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
                 const service = existingAccessory.getService(this.Service.LightSensor);
 
                 if (service!==undefined && device.lastEvents.notificationTwilight !== undefined) {
-                  const IsNight = device.lastEvents.notificationTwilight.value;
-                  service.getCharacteristic(this.Characteristic.CurrentAmbientLightLevel).updateValue(IsNight ? 1: 100);
+                  const isNight = device.lastEvents.notificationTwilight.value;
+                  service.updateCharacteristic(this.Characteristic.CurrentAmbientLightLevel, isNight ? 1: 100);
                 }
               }
 
@@ -65,8 +66,8 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
                 const service = existingAccessory.getService(this.Service.ContactSensor);
 
                 if (service!==undefined && device.lastEvents.notificationContact!==undefined) {
-                  const IsOpen = device.lastEvents.notificationContact.value;
-                  service.getCharacteristic(this.Characteristic.ContactSensorState).updateValue(IsOpen);
+                  const isOpen = device.lastEvents.notificationContact.value;
+                  service.updateCharacteristic(this.Characteristic.ContactSensorState, isOpen);
                 }
               }
 
@@ -74,9 +75,12 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
                 const service = existingAccessory.getService(this.Service.Lightbulb);
 
                 if (service!==undefined && device.lastEvents.switchLevel!==undefined) {
-                  const Brightness = device.lastEvents.switchLevel.value*100;
+                  if (service.getCharacteristic(this.Characteristic.TimeUpdate).value===false) { 
 
-                  service.getCharacteristic(this.Characteristic.Brightness).updateValue(Brightness);
+                    const brightness = device.lastEvents.switchLevel.value*100;
+                    service.updateCharacteristic(this.Characteristic.Brightness, brightness);
+                    service.updateCharacteristic(this.Characteristic.On, brightness>0);
+                  }
                 }
               }
 
@@ -84,21 +88,17 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
                 const service = existingAccessory.getService(this.Service.MotionSensor);
 
                 if (service!==undefined && device.lastEvents.notificationMotion!==undefined) {
-                  const HaveMotion = device.lastEvents.notificationMotion.value;
-
-                  service.getCharacteristic(this.Characteristic.MotionDetected).updateValue(HaveMotion);
+                  const haveMotion = device.lastEvents.notificationMotion.value;
+                  service.updateCharacteristic(this.Characteristic.MotionDetected, haveMotion);
                 }
               }
 
               if (device.capabilities[0] === 'notificationButton') { 
-                const service = existingAccessory.getService(this.Service.Switch);
+                const service = existingAccessory.getService(this.Service.ContactSensor);
 
                 if (service!==undefined && device.lastEvents.notificationButton!==undefined) {
-                  const IsOn = device.lastEvents.notificationButton.value;
-
-                  if (service.getCharacteristic(this.Characteristic.On).value!==IsOn) {
-                    service.getCharacteristic(this.Characteristic.On).updateValue(IsOn);
-                  }
+                  const isOn = device.lastEvents.notificationButton.value;
+                  service.updateCharacteristic(this.Characteristic.ContactSensorState, isOn);
                 }
               }
             }
@@ -122,8 +122,7 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
       for (const device of (<NexaObject[]>results)) {
         if (device.name !== undefined) {
 
-          const uuid = this.api.hap.uuid.generate(device.id.toString()+'_'+device.name);
-          const existingAccessory = this.accessories.find(accessory => accessory.UUID === uuid);
+          const existingAccessory = this.accessories.find(accessory => accessory.UUID === this.localId(device));
   
           if (existingAccessory) {
             if (device) {
@@ -165,7 +164,7 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
               this.log.info('Removing existing accessory:', existingAccessory.displayName);
             }
           } else {
-            const accessory = new this.api.platformAccessory(device.name, uuid);
+            const accessory = new this.api.platformAccessory(device.name, this.localId(device));
             accessory.context.device = device;
 
             if (device.capabilities[0] === 'switchBinary') { 
@@ -217,7 +216,7 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
         let found = false;
 
         for (const device of (<NexaObject[]>results)) {
-          if (accessory.UUID === this.api.hap.uuid.generate(device.id.toString()+'_'+device.name)) {
+          if (accessory.UUID === this.localId(device)) {
             found = true;
           }
         }
@@ -228,5 +227,9 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
         }
       });
     });
+  }
+
+  localId(device:NexaObject):string {
+    return this.api.hap.uuid.generate(device.id.toString()+'_'+device.name+'_'+device.capabilities[0]);
   }
 }

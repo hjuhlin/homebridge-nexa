@@ -1,16 +1,10 @@
-import { Service, PlatformAccessory, Logger, PlatformConfig, 
-  CharacteristicValue, CharacteristicSetCallback, CharacteristicGetCallback } from 'homebridge';
+import { Service, PlatformAccessory, Logger, PlatformConfig} from 'homebridge';
 
 import { NexaHomebridgePlatform } from '../platform';
 import { NexaObject } from '../types/NexaObject';
-import { HttpRequest } from '../utils/httprequest.js';
 
 export class TwilightAccessory {
   private service: Service;
-
-  public State = {
-    IsNight: false,
-  };
 
   constructor(
     private readonly platform: NexaHomebridgePlatform,
@@ -26,35 +20,11 @@ export class TwilightAccessory {
 
     this.service = this.accessory.getService(this.platform.Service.LightSensor) || 
     this.accessory.addService(this.platform.Service.LightSensor);
-    
     this.service.setCharacteristic(this.platform.Characteristic.Name, accessory.context.device.name);
-
-    if (jsonItem.lastEvents.notificationTwilight!==undefined) {
-      this.State.IsNight = jsonItem.lastEvents.notificationTwilight.value;
-    }
-
-    this.service.getCharacteristic(this.platform.Characteristic.CurrentAmbientLightLevel)
-      .on('set', this.setOn.bind(this))
-      .on('get', this.getOn.bind(this));
-  }
-
-  setOn(value: CharacteristicValue, callback: CharacteristicSetCallback) {
-    this.State.IsNight = value === 1 ? true: false;
     
-    callback(null);
-  }
-
-  getOn(callback: CharacteristicGetCallback) {
-    const httpRequest = new HttpRequest(this.config, this.log);
-
-    httpRequest.GetStatus(this.accessory.context.device.id).then((results)=> {
-      const jsonItem = (<NexaObject>results);
-      
-      if (jsonItem.lastEvents.notificationTwilight!==undefined) {
-        this.State.IsNight = jsonItem.lastEvents.notificationTwilight.value;
-      }
-    });
-
-    callback(null, this.State.IsNight ? 1: 100);
+    if (jsonItem.lastEvents.notificationTwilight!==undefined) {
+      const isNight = jsonItem.lastEvents.notificationTwilight.value;
+      this.service.updateCharacteristic(this.platform.Characteristic.CurrentAmbientLightLevel, isNight ? 1: 100);
+    }
   }
 }

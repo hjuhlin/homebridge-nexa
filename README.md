@@ -22,8 +22,8 @@ This is a plugin for Nexa Bridge X (1.7 and forward).
 1.3.0
 * Remote controls
 
-1.3.1 + 1.3.2
-* Bug fixes (Fixed get values)
+1.3.1 + 1.3.2 + 1.3.3
+* Bug fixes (rewrite on get and set values)
 
 Add issue for other devices/accessories you want support for
 
