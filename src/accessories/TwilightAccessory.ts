@@ -3,6 +3,7 @@ import { Service, PlatformAccessory, Logger, PlatformConfig,
 
 import { NexaHomebridgePlatform } from '../platform';
 import { NexaObject } from '../types/NexaObject';
+import { HttpRequest } from '../utils/httprequest.js';
 
 export class TwilightAccessory {
   private service: Service;
@@ -44,6 +45,15 @@ export class TwilightAccessory {
   }
 
   getOn(callback: CharacteristicGetCallback) {
+    const httpRequest = new HttpRequest(this.config, this.log);
+
+    httpRequest.GetStatus(this.accessory.context.device.id).then((results)=> {
+      const jsonItem = (<NexaObject>results);
+      
+      if (jsonItem.lastEvents.notificationTwilight!==undefined) {
+        this.State.IsNight = jsonItem.lastEvents.notificationTwilight.value;
+      }
+    });
 
     callback(null, this.State.IsNight ? 1: 100);
   }

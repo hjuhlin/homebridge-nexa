@@ -1,26 +1,53 @@
 const request = require('request');
 
-import { PlatformConfig } from 'homebridge';
+import { PlatformConfig, Logger } from 'homebridge';
 
 export class HttpRequest {
 
-  readonly urlForDeviceStatus = `http://${this.config['ip']}/v1/nodes?field=lastEvents&timeout=20000`;
-  readonly urlForDeviceControll = `http://${this.config['ip']}/v1/nodes/{id}/call?timeout=20000`;
+  readonly urlStatusAllDevices = `http://${this.config['ip']}/v1/nodes?field=lastEvents&timeout=5000`;
+  readonly urlStatusDevice = `http://${this.config['ip']}/v1/nodes/{id}?timeout=5000`;
+  readonly urlUpdateDevice = `http://${this.config['ip']}/v1/nodes/{id}/call?timeout=500`;
 
  
   constructor(
     public readonly config: PlatformConfig,
+    public readonly log: Logger,
   ) {}
 
   createInstance() {
     return {};
   }
 
-  GetStatusList() {
+  GetStatusListForAll() {
     return new Promise((resolve, reject) => {
       request(
         {
-          url: this.urlForDeviceStatus,
+          url: this.urlStatusAllDevices,
+          method: 'GET',
+          auth: {
+            user: 'nexa',
+            pass: 'nexa',
+            sendImmediately: false,
+          },
+          json: true,
+        }, (error, response, body) => {
+          if (error) {
+            reject(error);
+          } else {
+            resolve(body);
+          }
+        });
+    });
+  }
+
+  GetStatus(id: number) {
+    return new Promise((resolve, reject) => {
+
+      //this.log.info(this.urlStatusDevice.replace('{id}', id.toString()));
+
+      request(
+        {
+          url: this.urlStatusDevice.replace('{id}', id.toString()),
           method: 'GET',
           auth: {
             user: 'nexa',
@@ -43,7 +70,7 @@ export class HttpRequest {
 
       request(
         {
-          url: this.urlForDeviceControll.replace('{id}', id.toString()),
+          url: this.urlUpdateDevice.replace('{id}', id.toString()),
           method: 'POST',
           body: body,
           auth: {

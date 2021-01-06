@@ -3,6 +3,7 @@ import { Service, PlatformAccessory, Logger, PlatformConfig,
 
 import { NexaHomebridgePlatform } from '../platform';
 import { NexaObject } from '../types/NexaObject';
+import { HttpRequest } from '../utils/httprequest.js';
 
 export class ContactAccessory {
   private service: Service;
@@ -44,6 +45,16 @@ export class ContactAccessory {
   }
 
   getOn(callback: CharacteristicGetCallback) {
+    const httpRequest = new HttpRequest(this.config, this.log);
+
+    httpRequest.GetStatus(this.accessory.context.device.id).then((results)=> {
+      const jsonItem = (<NexaObject>results);
+      
+      if (jsonItem.lastEvents.notificationContact!==undefined) {
+        this.State.IsOpen = jsonItem.lastEvents.notificationContact.value;
+      }
+    });
+
     callback(null, this.State.IsOpen);
   }
 }

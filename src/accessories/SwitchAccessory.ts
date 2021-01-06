@@ -2,9 +2,8 @@ import { Service, PlatformAccessory, Logger, PlatformConfig,
   CharacteristicValue, CharacteristicSetCallback, CharacteristicGetCallback } from 'homebridge';
 
 import { NexaHomebridgePlatform } from '../platform';
-
-import { HttpRequest } from '../utils/httprequest.js';
 import { NexaObject } from '../types/NexaObject';
+import { HttpRequest } from '../utils/httprequest.js';
 
 export class SwitchAccessory {
   private service: Service;
@@ -46,7 +45,7 @@ export class SwitchAccessory {
         cap: 'switchBinary',
       };
 
-      const httpRequest = new HttpRequest(this.config);
+      const httpRequest = new HttpRequest(this.config, this.log);
 
       httpRequest.Update(this.accessory.context.device.id, body);
     }
@@ -55,6 +54,16 @@ export class SwitchAccessory {
   }
 
   getOn(callback: CharacteristicGetCallback) {
+    const httpRequest = new HttpRequest(this.config, this.log);
+
+    httpRequest.GetStatus(this.accessory.context.device.id).then((results)=> {
+      const jsonItem = (<NexaObject>results);
+      
+      if (jsonItem.lastEvents.switchBinary!==undefined) {
+        this.State.IsOn = jsonItem.lastEvents.switchBinary.value;
+      }
+    });
+
     callback(null, this.State.IsOn);
   }
 }

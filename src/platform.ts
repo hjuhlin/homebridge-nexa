@@ -1,4 +1,4 @@
-import { API, DynamicPlatformPlugin, Logger, PlatformAccessory, PlatformConfig, Service, Characteristic } from 'homebridge';
+import { API, DynamicPlatformPlugin, Logger, PlatformAccessory, PlatformConfig, Service, Characteristic, ServiceEventTypes } from 'homebridge';
 
 import { PLATFORM_NAME, PLUGIN_NAME } from './settings';
 import { SwitchAccessory } from './accessories/SwitchAccessory';
@@ -30,9 +30,9 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
     });
 
     setInterval(() => {
-      const httpRequest = new HttpRequest(this.config);
+      const httpRequest = new HttpRequest(this.config, log);
 
-      httpRequest.GetStatusList().then((results)=> {
+      httpRequest.GetStatusListForAll().then((results)=> {
 
         (<NexaObject[]>results).forEach(device => {
   
@@ -48,7 +48,7 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
                 if (service!==undefined && device.lastEvents.switchBinary!==undefined) {
                   //Refector this in some way so API isn't called with same data. 
                   const isOn = device.lastEvents.switchBinary.value;
-                  service.setCharacteristic(this.Characteristic.On, isOn);
+                  service.getCharacteristic(this.Characteristic.On).updateValue(isOn);
                 }
               }
 
@@ -57,7 +57,7 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
 
                 if (service!==undefined && device.lastEvents.notificationTwilight !== undefined) {
                   const IsNight = device.lastEvents.notificationTwilight.value;
-                  service.setCharacteristic(this.Characteristic.CurrentAmbientLightLevel, IsNight ? 1: 100);
+                  service.getCharacteristic(this.Characteristic.CurrentAmbientLightLevel).updateValue(IsNight ? 1: 100);
                 }
               }
 
@@ -66,7 +66,7 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
 
                 if (service!==undefined && device.lastEvents.notificationContact!==undefined) {
                   const IsOpen = device.lastEvents.notificationContact.value;
-                  service.setCharacteristic(this.Characteristic.ContactSensorState, IsOpen);
+                  service.getCharacteristic(this.Characteristic.ContactSensorState).updateValue(IsOpen);
                 }
               }
 
@@ -76,7 +76,7 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
                 if (service!==undefined && device.lastEvents.switchLevel!==undefined) {
                   const Brightness = device.lastEvents.switchLevel.value*100;
 
-                  service.setCharacteristic(this.Characteristic.Brightness, Brightness);
+                  service.getCharacteristic(this.Characteristic.Brightness).updateValue(Brightness);
                 }
               }
 
@@ -86,7 +86,7 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
                 if (service!==undefined && device.lastEvents.notificationMotion!==undefined) {
                   const HaveMotion = device.lastEvents.notificationMotion.value;
 
-                  service.setCharacteristic(this.Characteristic.MotionDetected, HaveMotion);
+                  service.getCharacteristic(this.Characteristic.MotionDetected).updateValue(HaveMotion);
                 }
               }
 
@@ -96,7 +96,9 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
                 if (service!==undefined && device.lastEvents.notificationButton!==undefined) {
                   const IsOn = device.lastEvents.notificationButton.value;
 
-                  service.setCharacteristic(this.Characteristic.On, IsOn);
+                  if (service.getCharacteristic(this.Characteristic.On).value!==IsOn) {
+                    service.getCharacteristic(this.Characteristic.On).updateValue(IsOn);
+                  }
                 }
               }
             }
@@ -114,9 +116,9 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
   }
 
   discoverDevices() {
-    const httpRequest = new HttpRequest(this.config);
+    const httpRequest = new HttpRequest(this.config, this.log);
 
-    httpRequest.GetStatusList().then((results)=> {
+    httpRequest.GetStatusListForAll().then((results)=> {
       for (const device of (<NexaObject[]>results)) {
         if (device.name !== undefined) {
 

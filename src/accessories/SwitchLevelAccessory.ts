@@ -2,9 +2,8 @@ import { Service, PlatformAccessory, Logger, PlatformConfig,
   CharacteristicValue, CharacteristicSetCallback, CharacteristicGetCallback } from 'homebridge';
 
 import { NexaHomebridgePlatform } from '../platform';
-
-import { HttpRequest } from '../utils/httprequest.js';
 import { NexaObject } from '../types/NexaObject';
+import { HttpRequest } from '../utils/httprequest.js';
 
 export class SwitchLevelAccessory {
   private service: Service;
@@ -60,7 +59,7 @@ export class SwitchLevelAccessory {
         'arguments': [number],
       };
 
-      const httpRequest = new HttpRequest(this.config);
+      const httpRequest = new HttpRequest(this.config, this.log);
 
       httpRequest.Update(this.accessory.context.device.id, body);
     }
@@ -86,7 +85,7 @@ export class SwitchLevelAccessory {
         'arguments': [number],
       };
 
-      const httpRequest = new HttpRequest(this.config);
+      const httpRequest = new HttpRequest(this.config, this.log);
 
       httpRequest.Update(this.accessory.context.device.id, body);
     }
@@ -95,10 +94,42 @@ export class SwitchLevelAccessory {
   }
 
   getOn(callback: CharacteristicGetCallback) {
+    const httpRequest = new HttpRequest(this.config, this.log);
+
+    httpRequest.GetStatus(this.accessory.context.device.id).then((results)=> {
+      const jsonItem = (<NexaObject>results);
+      
+      if (jsonItem.lastEvents.switchLevel!==undefined) {
+        this.State.Brightness = jsonItem.lastEvents.switchLevel.value;
+
+        if (this.State.Brightness===0) {
+          this.State.IsOn=false;
+        } else {
+          this.State.IsOn=true;
+        } 
+      }
+    });
+
     callback(null, this.State.IsOn);
   }
 
-  getBrightness(callback: CharacteristicGetCallback) {
+  getBrightness(callback: CharacteristicGetCallback) {   
+    const httpRequest = new HttpRequest(this.config, this.log);
+
+    httpRequest.GetStatus(this.accessory.context.device.id).then((results)=> {
+      const jsonItem = (<NexaObject>results);
+      
+      if (jsonItem.lastEvents.switchLevel!==undefined) {
+        this.State.Brightness = jsonItem.lastEvents.switchLevel.value;
+
+        if (this.State.Brightness===0) {
+          this.State.IsOn=false;
+        } else {
+          this.State.IsOn=true;
+        } 
+      }
+    });
+
     callback(null, this.State.Brightness);
   }
 }

@@ -3,6 +3,7 @@ import { Service, PlatformAccessory, Logger, PlatformConfig,
 
 import { NexaHomebridgePlatform } from '../platform';
 import { NexaObject } from '../types/NexaObject';
+import { HttpRequest } from '../utils/httprequest.js';
 
 export class MotionAccessory {
   private service: Service;
@@ -44,6 +45,16 @@ export class MotionAccessory {
   }
 
   getOn(callback: CharacteristicGetCallback) {
+    const httpRequest = new HttpRequest(this.config, this.log);
+
+    httpRequest.GetStatus(this.accessory.context.device.id).then((results)=> {
+      const jsonItem = (<NexaObject>results);
+      
+      if (jsonItem.lastEvents.notificationMotion!==undefined) {
+        this.State.HaveMotion = jsonItem.lastEvents.notificationMotion.value;
+      }
+    });
+
     callback(null, this.State.HaveMotion);
   }
 }

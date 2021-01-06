@@ -2,9 +2,8 @@ import { Service, PlatformAccessory, Logger, PlatformConfig,
   CharacteristicValue, CharacteristicSetCallback, CharacteristicGetCallback } from 'homebridge';
 
 import { NexaHomebridgePlatform } from '../platform';
-
-import { HttpRequest } from '../utils/httprequest.js';
 import { NexaObject } from '../types/NexaObject';
+import { HttpRequest } from '../utils/httprequest.js';
 
 export class ButtonAccessory {
   private service: Service;
@@ -44,6 +43,16 @@ export class ButtonAccessory {
   }
 
   getOn(callback: CharacteristicGetCallback) {
+    const httpRequest = new HttpRequest(this.config, this.log);
+
+    httpRequest.GetStatus(this.accessory.context.device.id).then((results)=> {
+      const jsonItem = (<NexaObject>results);
+      
+      if (jsonItem.lastEvents.notificationButton!==undefined) {
+        this.State.IsOn = jsonItem.lastEvents.notificationButton.value;
+      }
+    });
+
     callback(null, this.State.IsOn);
   }
 }
