@@ -22,6 +22,9 @@ This is a plugin for Nexa Bridge X (1.7 and forward).
 1.3.0
 * Remote controls
 
+1.3.1
+* Bugfixes
+
 Add issue for other devices/accessories you want support for
 
 # Default config
