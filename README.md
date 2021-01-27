@@ -25,6 +25,9 @@ This is a plugin for Nexa Bridge X (1.7 and forward).
 1.3.1 + 1.3.2 + 1.3.3
 * Bug fixes (rewrite on get and set values)
 
+1.4.0
+* Thermometer & Humidity sensor (NBN-001)
+
 Add issue for other devices/accessories you want support for
 
 # Default config

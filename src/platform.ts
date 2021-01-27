@@ -10,6 +10,7 @@ import { ContactAccessory } from './accessories/ContactAccessory';
 import { SwitchLevelAccessory } from './accessories/SwitchLevelAccessory';
 import { MotionAccessory } from './accessories/MotionAccessory';
 import { ButtonAccessory } from './accessories/ButtonAccessory';
+import { ThermometerAndHumidityAccessory } from './accessories/ThermometerAndHumidityAccessory';
 
 export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
   public readonly Service: typeof Service = this.api.hap.Service;
@@ -101,6 +102,22 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
                   service.updateCharacteristic(this.Characteristic.ContactSensorState, isOn);
                 }
               }
+
+              if (device.capabilities[0] === 'temperature' || device.capabilities[0] === 'humidity') { 
+                const serviceTemperature = existingAccessory.getService(this.Service.TemperatureSensor);
+
+                if (serviceTemperature!==undefined && device.lastEvents.temperature!==undefined) {
+                  const temperature = device.lastEvents.temperature.value;
+                  serviceTemperature.updateCharacteristic(this.Characteristic.CurrentTemperature, temperature);
+                }
+
+                const serviceHumidity = existingAccessory.getService(this.Service.HumiditySensor);
+
+                if (serviceHumidity!==undefined && device.lastEvents.temperature!==undefined) {
+                  const humidity = device.lastEvents.humidity.value;
+                  serviceHumidity.updateCharacteristic(this.Characteristic.CurrentRelativeHumidity, humidity);
+                }
+              }
             }
           }
         });
@@ -159,6 +176,12 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
                 new ButtonAccessory(this, existingAccessory, device, this.config, this.log);
                 this.api.updatePlatformAccessories([existingAccessory]);
               }
+
+              if (device.capabilities[0] === 'temperature' || device.capabilities[0] === 'humidity') { 
+                new ThermometerAndHumidityAccessory(this, existingAccessory, device, this.config, this.log);
+                this.api.updatePlatformAccessories([existingAccessory]);
+              }
+
             } else if (!device) {
               this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [existingAccessory]);
               this.log.info('Removing existing accessory:', existingAccessory.displayName);
@@ -206,6 +229,13 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
               this.log.info('Adding new accessory:', device.name);
 
               new ButtonAccessory(this, accessory, device, this.config, this.log);
+              this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
+            }
+
+            if (device.capabilities[0] === 'temperature' || device.capabilities[0] === 'humidity') { 
+              this.log.info('Adding new accessory:', device.name);
+
+              new ThermometerAndHumidityAccessory(this, accessory, device, this.config, this.log);
               this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
             }
           }
