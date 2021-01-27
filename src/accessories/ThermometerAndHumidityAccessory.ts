@@ -28,6 +28,8 @@ export class ThermometerAndHumidityAccessory {
 
     if (jsonItem.lastEvents.temperature!==undefined) {
       const temperature = jsonItem.lastEvents.temperature.value;
+      
+      this.service.getCharacteristic(this.platform.Characteristic.CurrentTemperature).setProps({minValue: -100, maxValue: 100});
       this.service.updateCharacteristic(this.platform.Characteristic.CurrentTemperature, temperature);
     }
 
