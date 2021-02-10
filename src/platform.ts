@@ -104,8 +104,8 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
               }
 
               if (device.capabilities[0] === 'temperature' || device.capabilities[0] === 'humidity') { 
+      
                 const serviceTemperature = existingAccessory.getService(this.Service.TemperatureSensor);
-
                 if (serviceTemperature!==undefined && device.lastEvents.temperature!==undefined) {
                   const temperature = device.lastEvents.temperature.value;
                   serviceTemperature.getCharacteristic(this.Characteristic.CurrentTemperature).setProps({minValue: -100, maxValue: 100});
@@ -113,8 +113,7 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
                 }
 
                 const serviceHumidity = existingAccessory.getService(this.Service.HumiditySensor);
-
-                if (serviceHumidity!==undefined && device.lastEvents.temperature!==undefined) {
+                if (serviceHumidity!==undefined && device.lastEvents.humidity!==undefined) {
                   const humidity = device.lastEvents.humidity.value;
                   serviceHumidity.updateCharacteristic(this.Characteristic.CurrentRelativeHumidity, humidity);
                 }
