@@ -3,7 +3,7 @@ import { Service, PlatformAccessory, Logger, PlatformConfig } from 'homebridge';
 import { NexaHomebridgePlatform } from '../platform';
 import { NexaObject } from '../types/NexaObject';
 
-export class ThermometerAndHumidityAccessory {
+export class ThermometerAccessory {
   private service: Service;
 
   constructor(
@@ -15,14 +15,11 @@ export class ThermometerAndHumidityAccessory {
   ) {
     this.accessory.getService(this.platform.Service.AccessoryInformation)!
       .setCharacteristic(this.platform.Characteristic.Manufacturer, 'Nexa')
-      .setCharacteristic(this.platform.Characteristic.Model, 'NexaThermometerAndHumiditySensor')
+      .setCharacteristic(this.platform.Characteristic.Model, 'NexaThermometerSensor')
       .setCharacteristic(this.platform.Characteristic.SerialNumber, accessory.context.device.id);
 
     this.service = this.accessory.getService(this.platform.Service.TemperatureSensor) || 
     this.accessory.addService(this.platform.Service.TemperatureSensor);
-
-    this.service = this.accessory.getService(this.platform.Service.HumiditySensor) || 
-    this.accessory.addService(this.platform.Service.HumiditySensor);
 
     this.service.setCharacteristic(this.platform.Characteristic.Name, accessory.context.device.name);
 
@@ -31,11 +28,6 @@ export class ThermometerAndHumidityAccessory {
       
       this.service.getCharacteristic(this.platform.Characteristic.CurrentTemperature).setProps({minValue: -100, maxValue: 100});
       this.service.updateCharacteristic(this.platform.Characteristic.CurrentTemperature, temperature);
-    }
-
-    if (jsonItem.lastEvents.humidity!==undefined) {
-      const humidity = jsonItem.lastEvents.humidity.value;
-      this.service.updateCharacteristic(this.platform.Characteristic.CurrentRelativeHumidity, humidity);
     }
   }
 }

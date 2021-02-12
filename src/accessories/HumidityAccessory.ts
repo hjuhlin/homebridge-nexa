@@ -3,7 +3,7 @@ import { Service, PlatformAccessory, Logger, PlatformConfig } from 'homebridge';
 import { NexaHomebridgePlatform } from '../platform';
 import { NexaObject } from '../types/NexaObject';
 
-export class SwitchAccessory {
+export class HumidityAccessory {
   private service: Service;
 
   constructor(
@@ -15,16 +15,17 @@ export class SwitchAccessory {
   ) {
     this.accessory.getService(this.platform.Service.AccessoryInformation)!
       .setCharacteristic(this.platform.Characteristic.Manufacturer, 'Nexa')
-      .setCharacteristic(this.platform.Characteristic.Model, 'NexaSwitch')
+      .setCharacteristic(this.platform.Characteristic.Model, 'NexaHumiditySensor')
       .setCharacteristic(this.platform.Characteristic.SerialNumber, accessory.context.device.id);
 
-    this.service = this.accessory.getService(this.platform.Service.Switch) || this.accessory.addService(this.platform.Service.Switch);
+    this.service = this.accessory.getService(this.platform.Service.HumiditySensor) || 
+    this.accessory.addService(this.platform.Service.HumiditySensor);
+
     this.service.setCharacteristic(this.platform.Characteristic.Name, accessory.context.device.name);
-    this.service.setCharacteristic(this.platform.Characteristic.TimeUpdate, false);
- 
-    if (jsonItem.lastEvents.switchBinary!==undefined) {
-      const isOn = jsonItem.lastEvents.switchBinary.value;
-      this.service.setCharacteristic(this.platform.Characteristic.On, isOn);
+
+    if (jsonItem.lastEvents.humidity!==undefined) {
+      const humidity = jsonItem.lastEvents.humidity.value;
+      this.service.updateCharacteristic(this.platform.Characteristic.CurrentRelativeHumidity, humidity);
     }
   }
 }
