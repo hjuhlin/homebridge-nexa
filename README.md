@@ -34,6 +34,12 @@ This is a plugin for Nexa Bridge X (1.7 and forward).
 1.5.0
 * Rewrite of code to make it work better with accessories that have multiple capabilities like Thermometer & Humidity sensor (NBN-001)
 
+1.5.1, 1.5.2. 1.5.3
+* Bugfixes with old data. Added an option to remove all during start up, to clear old bugged values
+
+1.6.0
+* Rewrite of code to support Z-wave items that does not report correct capabilities. 
+
 Add issue for other devices/accessories you want support for
 
 # Default config

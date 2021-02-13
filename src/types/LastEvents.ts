@@ -1,4 +1,6 @@
+import { Battery } from './Battery';
 import { Humidity } from './Humidity';
+import { Luminance } from './Luminance';
 import { MethodCall } from './MethodCall';
 import { NotificationButton } from './NotificationButton';
 import { NotificationContact } from './NotificationContact';
@@ -18,4 +20,6 @@ export interface LastEvents {
     notificationMotion: NotificationMotion;
     temperature: Temperature;
     humidity: Humidity;
+    luminance: Luminance;
+    battery: Battery;
 }

@@ -37,91 +37,72 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
       httpRequest.GetStatusListForAll().then((results)=> {
 
         (<NexaObject[]>results).forEach(device => {
-  
           if (device.name !== undefined) {
-            for (let c = 0; c<device.capabilities.length;c++) {
-              const existingAccessory = this.accessories.find(accessory => accessory.UUID === this.localId(device, c));
+            if (device.lastEvents.switchBinary!==undefined) {
+              const accessoryObject = this.getAccessory(device, 'switch');
+              const service = accessoryObject.accessory.getService(this.Service.Switch);
+
+              if (service!==undefined) {
+                service.updateCharacteristic(this.Characteristic.On, device.lastEvents.switchBinary.value);
+              }
+            }
+
+            if (device.lastEvents.notificationTwilight!==undefined) {
+              const accessoryObject = this.getAccessory(device, 'twilight');
+              const service = accessoryObject.accessory.getService(this.Service.LightSensor);
+
+              if (service!==undefined) {
+                const isNight = device.lastEvents.notificationTwilight.value;
+                service.updateCharacteristic(this.Characteristic.CurrentAmbientLightLevel, isNight ? 1: 100);
+              }
+            }
+
+            if (device.lastEvents.notificationContact!==undefined) {
+              const accessoryObject = this.getAccessory(device, 'contact');
+              const service = accessoryObject.accessory.getService(this.Service.ContactSensor);
+
+              if (service!==undefined) {
+                service.updateCharacteristic(this.Characteristic.ContactSensorState, device.lastEvents.notificationContact.value);
+              }
+            }
+
+            if (device.lastEvents.notificationButton!==undefined) {
+              const accessoryObject = this.getAccessory(device, 'button');
+              const service = accessoryObject.accessory.getService(this.Service.ContactSensor);
+
+              if (service!==undefined) {
+                service.updateCharacteristic(this.Characteristic.ContactSensorState, device.lastEvents.notificationButton.value);
+              }
+            }
+            
+            if (device.lastEvents.notificationMotion!==undefined) {
+
+              const accessoryObject = this.getAccessory(device, 'motion');
+              const service = accessoryObject.accessory.getService(this.Service.MotionSensor);
+
+              this.log.info('Test', device.lastEvents.notificationMotion.value);
+              this.log.info('service', service!==undefined);
+
+              if (service!==undefined) {
+                service.updateCharacteristic(this.Characteristic.MotionDetected, device.lastEvents.notificationMotion.value);
+              }
+            }
               
-              if (existingAccessory) {
-                if (device.capabilities[c] === 'switchBinary') {  
-                  const service = existingAccessory.getService(this.Service.Switch);
+            if (device.lastEvents.humidity!==undefined) {
+              const accessoryObject = this.getAccessory(device, 'humidity');
+              const service = accessoryObject.accessory.getService(this.Service.HumiditySensor);
 
-                  if (service!==undefined && device.lastEvents.switchBinary!==undefined) {
-                    const isOn = device.lastEvents.switchBinary.value;
+              if (service!==undefined) {
+                service.updateCharacteristic(this.Characteristic.CurrentRelativeHumidity, device.lastEvents.humidity.value);
+              }
+            }
 
-                    if (service.getCharacteristic(this.Characteristic.TimeUpdate).value===false) {
-                      service.updateCharacteristic(this.Characteristic.On, isOn);
-                    }
-                  }
-                }
+            if (device.lastEvents.temperature!==undefined) {
+              const accessoryObject = this.getAccessory(device, 'temperature');
+              const service = accessoryObject.accessory.getService(this.Service.TemperatureSensor);
 
-                if (device.capabilities[c] === 'notificationTwilight') {  
-                  const service = existingAccessory.getService(this.Service.LightSensor);
-
-                  if (service!==undefined && device.lastEvents.notificationTwilight !== undefined) {
-                    const isNight = device.lastEvents.notificationTwilight.value;
-                    service.updateCharacteristic(this.Characteristic.CurrentAmbientLightLevel, isNight ? 1: 100);
-                  }
-                }
-
-                if (device.capabilities[c] === 'notificationContact') { 
-                  const service = existingAccessory.getService(this.Service.ContactSensor);
-
-                  if (service!==undefined && device.lastEvents.notificationContact!==undefined) {
-                    const isOpen = device.lastEvents.notificationContact.value;
-                    service.updateCharacteristic(this.Characteristic.ContactSensorState, isOpen);
-                  }
-                }
-
-                if (device.capabilities[c] === 'notificationMotion') { 
-                  const service = existingAccessory.getService(this.Service.MotionSensor);
-
-                  if (service!==undefined && device.lastEvents.notificationMotion!==undefined) {
-                    const haveMotion = device.lastEvents.notificationMotion.value;
-                    service.updateCharacteristic(this.Characteristic.MotionDetected, haveMotion);
-                  }
-                }
-
-                if (device.capabilities[c] === 'notificationButton') { 
-                  const service = existingAccessory.getService(this.Service.ContactSensor);
-
-                  if (service!==undefined && device.lastEvents.notificationButton!==undefined) {
-                    const isOn = device.lastEvents.notificationButton.value;
-                    service.updateCharacteristic(this.Characteristic.ContactSensorState, isOn);
-                  }
-                }
-
-                if (device.capabilities[c] === 'temperature') { 
-                  const serviceTemperature = existingAccessory.getService(this.Service.TemperatureSensor);
-
-                  if (serviceTemperature!==undefined && device.lastEvents.temperature!==undefined) {
-                    const temperature = device.lastEvents.temperature.value;
-                    serviceTemperature.getCharacteristic(this.Characteristic.CurrentTemperature).setProps({minValue: -100, maxValue: 100});
-                    serviceTemperature.updateCharacteristic(this.Characteristic.CurrentTemperature, temperature);
-                  }
-                }
-
-                if (device.capabilities[c] === 'humidity') { 
-                  const serviceHumidity = existingAccessory.getService(this.Service.HumiditySensor);
-
-                  if (serviceHumidity!==undefined && device.lastEvents.humidity!==undefined) {
-                    const humidity = device.lastEvents.humidity.value;
-                    serviceHumidity.updateCharacteristic(this.Characteristic.CurrentRelativeHumidity, humidity);
-                  }
-                }
-
-                // if (device.capabilities[0] === 'switchLevel') { 
-                //   const service = existingAccessory.getService(this.Service.Lightbulb);
-
-                //   if (service!==undefined && device.lastEvents.switchLevel!==undefined) {
-                //     if (service.getCharacteristic(this.Characteristic.TimeUpdate).value===false) { 
-
-                //       const brightness = device.lastEvents.switchLevel.value*100;
-                //       service.updateCharacteristic(this.Characteristic.Brightness, brightness);
-                //       service.updateCharacteristic(this.Characteristic.On, brightness>0);
-                //     }
-                //   }
-                // }                
+              if (service!==undefined) {
+                service.updateCharacteristic(this.Characteristic.CurrentTemperature, device.lastEvents.temperature.value);
               }
             }
           }
@@ -144,62 +125,46 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
       for (const device of (<NexaObject[]>results)) {
         if (device.name !== undefined) {
           if (device) {
-            for (let c = 0; c<device.capabilities.length; c++) {
+            if (device.lastEvents.switchBinary!==undefined) {
+              const accessoryObject = this.getAccessory(device, 'switch');
+              new SwitchAccessory(this, accessoryObject.accessory, device, this.config, this.log);
+              this.addOrRestorAccessory(accessoryObject.accessory, device.name, 'switch', accessoryObject.exists);
+            }
 
-              if (device.capabilities[c] === 'switchBinary' || 
-                  device.capabilities[c] === 'notificationTwilight' || 
-                  device.capabilities[c] === 'notificationContact'|| 
-                  device.capabilities[c] === 'notificationMotion' ||
-                  device.capabilities[c] === 'notificationButton'||
-                  device.capabilities[c] === 'temperature'|| 
-                  device.capabilities[c] === 'humidity') {
+            if (device.lastEvents.notificationTwilight!==undefined) {
+              const accessoryObject = this.getAccessory(device, 'twilight');
+              new TwilightAccessory(this, accessoryObject.accessory, device, this.config, this.log);
+              this.addOrRestorAccessory(accessoryObject.accessory, device.name, 'twilight', accessoryObject.exists);
+            }
 
-                const existingAccessory = this.accessories.find(accessory => accessory.UUID === this.localId(device, c));
-                const accessory = new this.api.platformAccessory(device.name, this.localId(device, c));
+            if (device.lastEvents.notificationContact!==undefined) {
+              const accessoryObject = this.getAccessory(device, 'contact');
+              new ContactAccessory(this, accessoryObject.accessory, device, this.config, this.log);
+              this.addOrRestorAccessory(accessoryObject.accessory, device.name, 'contact', accessoryObject.exists);
+            }
+
+            if (device.lastEvents.notificationButton!==undefined) {
+              const accessoryObject = this.getAccessory(device, 'button');
+              new ButtonAccessory(this, accessoryObject.accessory, device, this.config, this.log);
+              this.addOrRestorAccessory(accessoryObject.accessory, device.name, 'button', accessoryObject.exists);
+            }
+
+            if (device.lastEvents.notificationMotion!==undefined) {
+              const accessoryObject = this.getAccessory(device, 'motion');
+              new MotionAccessory(this, accessoryObject.accessory, device, this.config, this.log);
+              this.addOrRestorAccessory(accessoryObject.accessory, device.name, 'motion', accessoryObject.exists);
+            }
               
-                if (device.capabilities[c] === 'switchBinary') { 
-                  new SwitchAccessory(this, existingAccessory?existingAccessory:accessory, device, this.config, this.log);
-                }
+            if (device.lastEvents.humidity!==undefined) {
+              const accessoryObject = this.getAccessory(device, 'humidity');
+              new HumidityAccessory(this, accessoryObject.accessory, device, this.config, this.log);
+              this.addOrRestorAccessory(accessoryObject.accessory, device.name, 'humidity', accessoryObject.exists);
+            }
 
-                if (device.capabilities[c] === 'notificationTwilight') { 
-                  new TwilightAccessory(this, existingAccessory?existingAccessory:accessory, device, this.config, this.log);
-                }
-
-                if (device.capabilities[c] === 'notificationContact') { 
-                  new ContactAccessory(this, existingAccessory?existingAccessory:accessory, device, this.config, this.log);
-                }
-
-                if (device.capabilities[c] === 'notificationMotion') { 
-                  new MotionAccessory(this, existingAccessory?existingAccessory:accessory, device, this.config, this.log);
-                }
-
-                if (device.capabilities[c] === 'notificationButton') { 
-                  new ButtonAccessory(this, existingAccessory?existingAccessory:accessory, device, this.config, this.log);
-                }
-
-                if (device.capabilities[c] === 'temperature') { 
-                  new ThermometerAccessory(this, existingAccessory?existingAccessory:accessory, device, this.config, this.log);
-                }
-
-                if (device.capabilities[c] === 'humidity') { 
-                  new HumidityAccessory(this, existingAccessory?existingAccessory:accessory, device, this.config, this.log);
-                }
-
-                if (existingAccessory) {
-                  existingAccessory.displayName = device.name;
-
-                  this.log.info('Restoring existing accessory:', device.name +' ('+device.capabilities[c]+')');
-                  this.api.updatePlatformAccessories([existingAccessory]);
-                
-                } else {
-                  accessory.context.device = device;
-
-                  this.log.info('Adding new accessory:', device.name +' ('+device.capabilities[c]+')');
-                  this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
-                }
-              } else {
-                this.log.error('No support for:', device.name +' ('+device.capabilities[c]+')');
-              }
+            if (device.lastEvents.temperature!==undefined) {
+              const accessoryObject = this.getAccessory(device, 'temperature');
+              new ThermometerAccessory(this, accessoryObject.accessory, device, this.config, this.log);
+              this.addOrRestorAccessory(accessoryObject.accessory, device.name, 'temperature', accessoryObject.exists);
             }
           }
         }
@@ -209,14 +174,18 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
         let found = false;
 
         for (const device of (<NexaObject[]>results)) {
-          for (let c = 0; c<device.capabilities.length;c++) {
-            if (accessory.UUID === this.localId(device, c)) {
-              found = true;
-            }
+          if (accessory.UUID === this.localIdForType(device, 'switch') ||
+          accessory.UUID === this.localIdForType(device, 'twilight') ||
+          accessory.UUID === this.localIdForType(device, 'contact')||
+          accessory.UUID === this.localIdForType(device, 'button')||
+          accessory.UUID === this.localIdForType(device, 'motion')||
+          accessory.UUID === this.localIdForType(device, 'humidity')||
+          accessory.UUID === this.localIdForType(device, 'temperature')) {
+            found = true;
           }
         }
 
-        if (found === false) {
+        if (found === false || this.config['ClearAllAtStartUp'] as boolean) {
           this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
           this.log.info('Removing existing accessory:', accessory.displayName);
         }
@@ -224,7 +193,32 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
     });
   }
 
-  localId(device:NexaObject, c:number):string {
-    return this.api.hap.uuid.generate(device.id.toString()+'_'+device.name+'_'+device.capabilities[c]+'_v1.5');
+  public getAccessory(device: NexaObject, type: string) {
+    const existingAccessory = this.accessories.find(accessory => accessory.UUID === this.localIdForType(device, type));
+
+    if (existingAccessory!==undefined) {
+      existingAccessory.displayName = device.name;
+
+      return {accessory : existingAccessory, exists : true};
+    }
+
+    const accessory = new this.api.platformAccessory(device.name, this.localIdForType(device, type));
+    accessory.context.device = device;
+
+    return {accessory : accessory, exists : false};
+  }
+
+  public addOrRestorAccessory(accessory: PlatformAccessory<Record<string, unknown>>, name: string, type: string, exists: boolean ) {
+    if (exists) {
+      this.log.info('Restoring existing accessory:', name +' ('+type+')');
+      this.api.updatePlatformAccessories([accessory]);
+    } else {
+      this.log.info('Adding new accessory:', name +' ('+type+')');
+      this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
+    }
+  }
+
+  localIdForType(device:NexaObject, type:string):string {
+    return this.api.hap.uuid.generate(device.id.toString()+'_'+device.name+'_'+type);
   }
 }
