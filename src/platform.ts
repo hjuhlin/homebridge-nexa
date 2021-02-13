@@ -12,6 +12,7 @@ import { MotionAccessory } from './accessories/MotionAccessory';
 import { ButtonAccessory } from './accessories/ButtonAccessory';
 import { ThermometerAccessory } from './accessories/ThermometerAccessory';
 import { HumidityAccessory } from './accessories/HumidityAccessory';
+import { LuminanceAccessory } from './accessories/LuminanceAccessory';
 
 export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
   public readonly Service: typeof Service = this.api.hap.Service;
@@ -101,6 +102,15 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
                 service.updateCharacteristic(this.Characteristic.CurrentTemperature, device.lastEvents.temperature.value);
               }
             }
+
+            if (device.lastEvents.luminance!==undefined) {
+              const accessoryObject = this.getAccessory(device, 'luminance');
+              const service = accessoryObject.accessory.getService(this.Service.LightSensor);
+
+              if (service!==undefined) {
+                service.updateCharacteristic(this.Characteristic.CurrentAmbientLightLevel, device.lastEvents.luminance.value);
+              }
+            }
           }
         });
       });
@@ -162,6 +172,12 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
               new ThermometerAccessory(this, accessoryObject.accessory, device, this.config, this.log);
               this.addOrRestorAccessory(accessoryObject.accessory, device.name, 'temperature', accessoryObject.exists);
             }
+
+            if (device.lastEvents.luminance!==undefined) {
+              const accessoryObject = this.getAccessory(device, 'luminance');
+              new LuminanceAccessory(this, accessoryObject.accessory, device, this.config, this.log);
+              this.addOrRestorAccessory(accessoryObject.accessory, device.name, 'luminance', accessoryObject.exists);
+            }
           }
         }
       }
@@ -176,7 +192,8 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
           accessory.UUID === this.localIdForType(device, 'button')||
           accessory.UUID === this.localIdForType(device, 'motion')||
           accessory.UUID === this.localIdForType(device, 'humidity')||
-          accessory.UUID === this.localIdForType(device, 'temperature')) {
+          accessory.UUID === this.localIdForType(device, 'temperature')||
+          accessory.UUID === this.localIdForType(device, 'luminance')) {
             found = true;
           }
         }

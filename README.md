@@ -40,6 +40,9 @@ This is a plugin for Nexa Bridge X (1.7 and forward).
 1.6.0
 * Rewrite of code to support Z-wave items that does not report correct capabilities. 
 
+1.7.0
+* Added support for luminance sensor
+
 Add issue for other devices/accessories you want support for
 
 # Default config
