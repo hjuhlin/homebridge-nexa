@@ -9,7 +9,6 @@ This is a plugin for Nexa Bridge X (1.7 and forward).
 # Support for
 1.0.0
 * Switches
-* Virtual Switches
 * Magnetic contact
 * Twilight relay - 1 = night, 100 = day. 
 
@@ -42,6 +41,9 @@ This is a plugin for Nexa Bridge X (1.7 and forward).
 
 1.7.0
 * Added support for luminance sensor
+
+1.7.1
+* Bug fix for switches
 
 Add issue for other devices/accessories you want support for
 

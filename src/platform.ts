@@ -80,6 +80,8 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
               const accessoryObject = this.getAccessory(device, 'motion');
               const service = accessoryObject.accessory.getService(this.Service.MotionSensor);
 
+              //this.log.info('device.lastEvents.notificationMotion.value', device.lastEvents.notificationMotion.value);
+
               if (service!==undefined) {
                 service.updateCharacteristic(this.Characteristic.MotionDetected, device.lastEvents.notificationMotion.value);
               }

@@ -1,7 +1,8 @@
-import { Service, PlatformAccessory, Logger, PlatformConfig } from 'homebridge';
+import { Service, PlatformAccessory, Logger, PlatformConfig, CharacteristicValue, CharacteristicSetCallback } from 'homebridge';
 
 import { NexaHomebridgePlatform } from '../platform';
 import { NexaObject } from '../types/NexaObject';
+import { HttpRequest } from '../utils/httprequest';
 
 export class SwitchAccessory {
   private service: Service;
@@ -25,5 +26,23 @@ export class SwitchAccessory {
       const isOn = jsonItem.lastEvents.switchBinary.value;
       this.service.setCharacteristic(this.platform.Characteristic.On, isOn);
     }
+
+    this.service.getCharacteristic(this.platform.Characteristic.On).on('set', this.setOn.bind(this));  
+  }
+
+  setOn(value: CharacteristicValue, callback: CharacteristicSetCallback) {
+    this.service.setCharacteristic(this.platform.Characteristic.TimeUpdate, true);
+
+    const body = {
+      method: value ? 'turnOn' : 'turnOff',
+      cap: 'switchBinary',
+    };
+
+    const httpRequest = new HttpRequest(this.config, this.log);
+    httpRequest.Update(this.accessory.context.device.id, body).then(()=> {
+      this.service.setCharacteristic(this.platform.Characteristic.TimeUpdate, false);
+    });
+
+    callback(null, value);
   }
 }
