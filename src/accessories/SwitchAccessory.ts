@@ -21,27 +21,29 @@ export class SwitchAccessory {
 
     this.service = this.accessory.getService(this.platform.Service.Switch) || this.accessory.addService(this.platform.Service.Switch);
     this.service.setCharacteristic(this.platform.Characteristic.Name, accessory.context.device.name);
- 
+    this.service.addOptionalCharacteristic(this.platform.customCharacteristic.characteristic.ElectricPower);
+
     if (jsonItem.lastEvents.switchBinary!==undefined) {
       const isOn = jsonItem.lastEvents.switchBinary.value;
       this.service.setCharacteristic(this.platform.Characteristic.On, isOn);
+    }
+
+    if (jsonItem.lastEvents.power!==undefined) {
+      const power = jsonItem.lastEvents.switchBinary.value;
+      this.service.setCharacteristic(this.platform.customCharacteristic.characteristic.ElectricPower, power);
     }
 
     this.service.getCharacteristic(this.platform.Characteristic.On).on('set', this.setOn.bind(this));  
   }
 
   setOn(value: CharacteristicValue, callback: CharacteristicSetCallback) {
-    this.service.setCharacteristic(this.platform.Characteristic.TimeUpdate, true);
-
     const body = {
       method: value ? 'turnOn' : 'turnOff',
       cap: 'switchBinary',
     };
 
     const httpRequest = new HttpRequest(this.config, this.log);
-    httpRequest.Update(this.accessory.context.device.id, body).then(()=> {
-      this.service.setCharacteristic(this.platform.Characteristic.TimeUpdate, false);
-    });
+    httpRequest.Update(this.accessory.context.device.id, body);
 
     callback(null, value);
   }

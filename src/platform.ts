@@ -13,18 +13,23 @@ import { ButtonAccessory } from './accessories/ButtonAccessory';
 import { ThermometerAccessory } from './accessories/ThermometerAccessory';
 import { HumidityAccessory } from './accessories/HumidityAccessory';
 import { LuminanceAccessory } from './accessories/LuminanceAccessory';
+import { CustomCharacteristic } from './CustomCharacteristic';
 
 export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
   public readonly Service: typeof Service = this.api.hap.Service;
   public readonly Characteristic: typeof Characteristic = this.api.hap.Characteristic;
   public readonly accessories: PlatformAccessory[] = [];
+  public customCharacteristic: CustomCharacteristic;
 
   constructor(
     public readonly log: Logger,
     public readonly config: PlatformConfig,
     public readonly api: API,
+    
   ) {
     this.log.debug('Finished initializing platform:', this.config.name);
+
+    this.customCharacteristic = new CustomCharacteristic(api);
 
     this.api.on('didFinishLaunching', () => {
       log.debug('Executed didFinishLaunching callback');
@@ -45,6 +50,11 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
 
               if (service!==undefined) {
                 service.updateCharacteristic(this.Characteristic.On, device.lastEvents.switchBinary.value);
+               
+                if (device.lastEvents.power!==undefined) {
+                  const power = device.lastEvents.power.value;
+                  service.updateCharacteristic(this.customCharacteristic.characteristic.ElectricPower, power);
+                }
               }
             }
 
@@ -237,3 +247,4 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
     return this.api.hap.uuid.generate(device.id.toString()+'_'+device.name+'_'+type);
   }
 }
+
