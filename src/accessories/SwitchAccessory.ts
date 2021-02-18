@@ -22,6 +22,7 @@ export class SwitchAccessory {
     this.service = this.accessory.getService(this.platform.Service.Switch) || this.accessory.addService(this.platform.Service.Switch);
     this.service.setCharacteristic(this.platform.Characteristic.Name, accessory.context.device.name);
     this.service.addOptionalCharacteristic(this.platform.customCharacteristic.characteristic.ElectricPower);
+    this.service.addOptionalCharacteristic(this.platform.Characteristic.Active);
 
     if (jsonItem.lastEvents.switchBinary!==undefined) {
       const isOn = jsonItem.lastEvents.switchBinary.value;
@@ -29,8 +30,11 @@ export class SwitchAccessory {
     }
 
     if (jsonItem.lastEvents.power!==undefined) {
-      const power = jsonItem.lastEvents.switchBinary.value;
+      const power = jsonItem.lastEvents.power.value;
       this.service.setCharacteristic(this.platform.customCharacteristic.characteristic.ElectricPower, power);
+
+      const powerConsumptionLimit = this.config['PowerConsumptionLimit'] as number;
+      this.service.setCharacteristic(this.platform.Characteristic.Active, power>powerConsumptionLimit);
     }
 
     this.service.getCharacteristic(this.platform.Characteristic.On).on('set', this.setOn.bind(this));  

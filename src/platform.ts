@@ -54,6 +54,9 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
                 if (device.lastEvents.power!==undefined) {
                   const power = device.lastEvents.power.value;
                   service.updateCharacteristic(this.customCharacteristic.characteristic.ElectricPower, power);
+
+                  const powerConsumptionLimit = this.config['PowerConsumptionLimit'] as number;
+                  service.setCharacteristic(this.Characteristic.Active, power>powerConsumptionLimit);
                 }
               }
             }

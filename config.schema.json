@@ -33,6 +33,12 @@
         "type": "number",
         "required": true,
         "default": 5
+      },
+      "PowerConsumptionLimit": {
+        "title": "Power consumption limit in watts when the outlets is in use or not",
+        "type": "number",
+        "required": true,
+        "default": 5
       }
       ,
       "ClearAllAtStartUp": {

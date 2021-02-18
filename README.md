@@ -45,8 +45,8 @@ This is a plugin for Nexa Bridge X (1.7 and forward).
 1.7.1
 * Bug fix for switches
 
-1.8.0
-* Trying with current power consumption for Switches
+1.8.0, 1.8.1, 1.8.2, 1.8.3, 1.8.4, 1.8.5
+* Current power consumption for Switches (outlets)
 
 Add issue for other devices/accessories you want support for
 
