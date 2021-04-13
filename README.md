@@ -48,6 +48,12 @@ This is a plugin for Nexa Bridge X (1.7 and forward).
 1.8.6
 * Current power consumption for Switches (outlets) (active if power is bigger then PowerConsumptionLimit in config)
 
+1.9.0
+* Update for Homebridge >= 1.3.0
+
+1.9.1  
+* Bug fix for CurrentAmbientLightLevel
+
 Add issue for other devices/accessories you want support for
 
 # Default config

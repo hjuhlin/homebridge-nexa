@@ -16,7 +16,7 @@ export class HumidityAccessory {
     this.accessory.getService(this.platform.Service.AccessoryInformation)!
       .setCharacteristic(this.platform.Characteristic.Manufacturer, 'Nexa')
       .setCharacteristic(this.platform.Characteristic.Model, 'NexaHumiditySensor')
-      .setCharacteristic(this.platform.Characteristic.SerialNumber, accessory.context.device.id);
+      .setCharacteristic(this.platform.Characteristic.SerialNumber, 'Nexa-'+accessory.context.device.id);
 
     this.service = this.accessory.getService(this.platform.Service.HumiditySensor) || 
     this.accessory.addService(this.platform.Service.HumiditySensor);

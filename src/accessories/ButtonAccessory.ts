@@ -16,7 +16,7 @@ export class ButtonAccessory {
     this.accessory.getService(this.platform.Service.AccessoryInformation)!
       .setCharacteristic(this.platform.Characteristic.Manufacturer, 'Nexa')
       .setCharacteristic(this.platform.Characteristic.Model, 'NexaButton')
-      .setCharacteristic(this.platform.Characteristic.SerialNumber, accessory.context.device.id);
+      .setCharacteristic(this.platform.Characteristic.SerialNumber, 'Nexa-'+accessory.context.device.id);
 
     this.service = this.accessory.getService(this.platform.Service.ContactSensor) || 
     this.accessory.addService(this.platform.Service.ContactSensor);

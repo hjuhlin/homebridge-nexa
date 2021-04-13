@@ -16,14 +16,19 @@ export class LuminanceAccessory {
     this.accessory.getService(this.platform.Service.AccessoryInformation)!
       .setCharacteristic(this.platform.Characteristic.Manufacturer, 'Nexa')
       .setCharacteristic(this.platform.Characteristic.Model, 'NexaLuminance')
-      .setCharacteristic(this.platform.Characteristic.SerialNumber, accessory.context.device.id);
+      .setCharacteristic(this.platform.Characteristic.SerialNumber, 'Nexa-'+accessory.context.device.id);
 
     this.service = this.accessory.getService(this.platform.Service.LightSensor) || 
     this.accessory.addService(this.platform.Service.LightSensor);
     this.service.setCharacteristic(this.platform.Characteristic.Name, accessory.context.device.name);
     
     if (jsonItem.lastEvents.luminance!==undefined) {
-      const luminance = jsonItem.lastEvents.luminance.value;
+      let luminance = jsonItem.lastEvents.luminance.value;
+
+      if (luminance===0) {
+        luminance=0.1;
+      }
+
       this.service.updateCharacteristic(this.platform.Characteristic.CurrentAmbientLightLevel, luminance);
     }
   }

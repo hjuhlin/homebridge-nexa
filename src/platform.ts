@@ -27,8 +27,6 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
     public readonly api: API,
     
   ) {
-    this.log.debug('Finished initializing platform:', this.config.name);
-
     this.customCharacteristic = new CustomCharacteristic(api);
 
     this.api.on('didFinishLaunching', () => {
@@ -36,6 +34,8 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
 
       this.discoverDevices();
     });
+
+    this.log.debug('Finished initializing platform:', this.config.name);
 
     setInterval(() => {
       const httpRequest = new HttpRequest(this.config, log);
@@ -122,8 +122,14 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
               const accessoryObject = this.getAccessory(device, 'luminance');
               const service = accessoryObject.accessory.getService(this.Service.LightSensor);
 
+              let luminance = device.lastEvents.luminance.value;
+
+              if (luminance===0) {
+                luminance=0.1;
+              }
+
               if (service!==undefined) {
-                service.updateCharacteristic(this.Characteristic.CurrentAmbientLightLevel, device.lastEvents.luminance.value);
+                service.updateCharacteristic(this.Characteristic.CurrentAmbientLightLevel, luminance);
               }
             }
           }

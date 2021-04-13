@@ -17,7 +17,7 @@ export class SwitchAccessory {
     this.accessory.getService(this.platform.Service.AccessoryInformation)!
       .setCharacteristic(this.platform.Characteristic.Manufacturer, 'Nexa')
       .setCharacteristic(this.platform.Characteristic.Model, 'NexaSwitch')
-      .setCharacteristic(this.platform.Characteristic.SerialNumber, accessory.context.device.id);
+      .setCharacteristic(this.platform.Characteristic.SerialNumber, 'Nexa-'+accessory.context.device.id);
 
     this.service = this.accessory.getService(this.platform.Service.Switch) || this.accessory.addService(this.platform.Service.Switch);
     this.service.setCharacteristic(this.platform.Characteristic.Name, accessory.context.device.name);
