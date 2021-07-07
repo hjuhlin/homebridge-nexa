@@ -130,10 +130,10 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
               if (service!==undefined) {
                 service.updateCharacteristic(this.Characteristic.CurrentRelativeHumidity, device.lastEvents.humidity.value);
 
-                if (this.config['EveLoging'] as boolean && this.update) {
-                  accessoryObject.accessory.context.fakeGatoService.addEntry({
-                    time: Math.round(new Date().valueOf() / 1000), humidity: device.lastEvents.humidity.value});
-                }
+                // if (this.config['EveLoging'] as boolean && this.update) {
+                //   accessoryObject.accessory.context.fakeGatoService.addEntry({
+                //     time: Math.round(new Date().valueOf() / 1000), humidity: device.lastEvents.humidity.value});
+                // }
               }
             }
 
@@ -240,12 +240,12 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
               new HumidityAccessory(this, accessoryObject.accessory, device, this.config, this.log);
               this.addOrRestorAccessory(accessoryObject.accessory, device.name, 'humidity', accessoryObject.exists);
 
-              if (this.config['EveLoging'] as boolean === true) {
-                const fakeGatoService = new this.FakeGatoHistoryService('room', accessoryObject.accessory,
-                  {log: this.log, storage: 'fs', disableTimer:true});
+              // if (this.config['EveLoging'] as boolean === true) {
+              //   const fakeGatoService = new this.FakeGatoHistoryService('room', accessoryObject.accessory,
+              //     {log: this.log, storage: 'fs', disableTimer:true});
 
-                accessoryObject.accessory.context.fakeGatoService = fakeGatoService;
-              }
+              //   accessoryObject.accessory.context.fakeGatoService = fakeGatoService;
+              // }
             }
 
             if (device.lastEvents.temperature!==undefined) {
