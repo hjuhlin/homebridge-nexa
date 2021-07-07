@@ -54,7 +54,7 @@ This is a plugin for Nexa Bridge X (1.7 and forward).
 1.9.1  
 * Bug fix for CurrentAmbientLightLevel
 
-2.0
+2.0.0, 2.0.1
 * Added support for Eve statistics
 
 Add issue for other devices/accessories you want support for

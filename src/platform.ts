@@ -24,8 +24,8 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
   public customCharacteristic: CustomCharacteristic;
 
   private FakeGatoHistoryService;
-
-  public lastUpdate = new Date('2021-01-01');
+  private lastUpdate = new Date('2021-01-01');
+  private update =false;
 
   constructor(
     public readonly log: Logger,
@@ -47,10 +47,15 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
 
     setInterval(() => {
       const httpRequest = new HttpRequest(this.config, log);
-      const now = new Date();
-      const added9Min = new Date(this.lastUpdate.getTime()+(9*60000));
 
       httpRequest.GetStatusListForAll().then((results)=> {
+        const now = new Date();
+        const added9Min = new Date(this.lastUpdate.getTime()+(9*60000));
+  
+        if (now>added9Min) {
+          this.lastUpdate = now;
+          this.update = true;
+        }
 
         (<NexaObject[]>results).forEach(device => {
           if (device.name !== undefined) {
@@ -68,11 +73,9 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
                   const powerConsumptionLimit = this.config['PowerConsumptionLimit'] as number;
                   service.updateCharacteristic(this.Characteristic.Active, power>powerConsumptionLimit);
 
-                  if (this.config['EveLoging'] as boolean) {
-                    if (now>added9Min) {
-                      accessoryObject.accessory.context.fakeGatoService.addEntry({
-                        time: Math.round(new Date().valueOf() / 1000), power: power});
-                    }
+                  if (this.config['EveLoging'] as boolean && this.update) {
+                    accessoryObject.accessory.context.fakeGatoService.addEntry({
+                      time: Math.round(new Date().valueOf() / 1000), power: Math.round(power)});
                   }
                 }
               }
@@ -113,11 +116,9 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
               if (service!==undefined) {
                 service.updateCharacteristic(this.Characteristic.MotionDetected, device.lastEvents.notificationMotion.value);
 
-                if (this.config['EveLoging'] as boolean) {
-                  if (now>added9Min) {
-                    accessoryObject.accessory.context.fakeGatoService.addEntry({
-                      time: Math.round(new Date().valueOf() / 1000), power: device.lastEvents.notificationMotion.value});
-                  }
+                if (this.config['EveLoging'] as boolean && this.update) {
+                  accessoryObject.accessory.context.fakeGatoService.addEntry({
+                    time: Math.round(new Date().valueOf() / 1000), power: device.lastEvents.notificationMotion.value});
                 }
               }
             }
@@ -129,11 +130,9 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
               if (service!==undefined) {
                 service.updateCharacteristic(this.Characteristic.CurrentRelativeHumidity, device.lastEvents.humidity.value);
 
-                if (this.config['EveLoging'] as boolean) {
-                  if (now>added9Min) {
-                    accessoryObject.accessory.context.fakeGatoService.addEntry({
-                      time: Math.round(new Date().valueOf() / 1000), humidity: device.lastEvents.humidity.value});
-                  }
+                if (this.config['EveLoging'] as boolean && this.update) {
+                  accessoryObject.accessory.context.fakeGatoService.addEntry({
+                    time: Math.round(new Date().valueOf() / 1000), humidity: device.lastEvents.humidity.value});
                 }
               }
             }
@@ -145,11 +144,9 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
               if (service!==undefined) {
                 service.updateCharacteristic(this.Characteristic.CurrentTemperature, device.lastEvents.temperature.value);
 
-                if (this.config['EveLoging'] as boolean) {
-                  if (now>added9Min) {
-                    accessoryObject.accessory.context.fakeGatoService.addEntry({
-                      time: Math.round(new Date().valueOf() / 1000), temp: device.lastEvents.temperature.value});
-                  }
+                if (this.config['EveLoging'] as boolean && this.update) {
+                  accessoryObject.accessory.context.fakeGatoService.addEntry({
+                    time: Math.round(new Date().valueOf() / 1000), temp: device.lastEvents.temperature.value});
                 }
               }
             }
@@ -172,7 +169,7 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
         });
       });
 
-      this.lastUpdate = now;
+      this.update= false;
 
     }, (this.config['UpdateTime'] as number) * 1000);
       
