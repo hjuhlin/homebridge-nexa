@@ -15,11 +15,17 @@ import { HumidityAccessory } from './accessories/HumidityAccessory';
 import { LuminanceAccessory } from './accessories/LuminanceAccessory';
 import { CustomCharacteristic } from './CustomCharacteristic';
 
+import fakegato from 'fakegato-history';
+
 export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
   public readonly Service: typeof Service = this.api.hap.Service;
   public readonly Characteristic: typeof Characteristic = this.api.hap.Characteristic;
   public readonly accessories: PlatformAccessory[] = [];
   public customCharacteristic: CustomCharacteristic;
+
+  private FakeGatoHistoryService;
+
+  public lastUpdate = new Date('2021-01-01');
 
   constructor(
     public readonly log: Logger,
@@ -35,10 +41,14 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
       this.discoverDevices();
     });
 
+    this.FakeGatoHistoryService = fakegato(this.api);
+
     this.log.debug('Finished initializing platform:', this.config.name);
 
     setInterval(() => {
       const httpRequest = new HttpRequest(this.config, log);
+      const now = new Date();
+      const added9Min = new Date(this.lastUpdate.getTime()+(9*60000));
 
       httpRequest.GetStatusListForAll().then((results)=> {
 
@@ -57,6 +67,13 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
 
                   const powerConsumptionLimit = this.config['PowerConsumptionLimit'] as number;
                   service.updateCharacteristic(this.Characteristic.Active, power>powerConsumptionLimit);
+
+                  if (this.config['EveLoging'] as boolean) {
+                    if (now>added9Min) {
+                      accessoryObject.accessory.context.fakeGatoService.addEntry({
+                        time: Math.round(new Date().valueOf() / 1000), power: power});
+                    }
+                  }
                 }
               }
             }
@@ -93,10 +110,15 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
               const accessoryObject = this.getAccessory(device, 'motion');
               const service = accessoryObject.accessory.getService(this.Service.MotionSensor);
 
-              //this.log.info('device.lastEvents.notificationMotion.value', device.lastEvents.notificationMotion.value);
-
               if (service!==undefined) {
                 service.updateCharacteristic(this.Characteristic.MotionDetected, device.lastEvents.notificationMotion.value);
+
+                if (this.config['EveLoging'] as boolean) {
+                  if (now>added9Min) {
+                    accessoryObject.accessory.context.fakeGatoService.addEntry({
+                      time: Math.round(new Date().valueOf() / 1000), power: device.lastEvents.notificationMotion.value});
+                  }
+                }
               }
             }
               
@@ -106,6 +128,13 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
 
               if (service!==undefined) {
                 service.updateCharacteristic(this.Characteristic.CurrentRelativeHumidity, device.lastEvents.humidity.value);
+
+                if (this.config['EveLoging'] as boolean) {
+                  if (now>added9Min) {
+                    accessoryObject.accessory.context.fakeGatoService.addEntry({
+                      time: Math.round(new Date().valueOf() / 1000), humidity: device.lastEvents.humidity.value});
+                  }
+                }
               }
             }
 
@@ -115,6 +144,13 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
 
               if (service!==undefined) {
                 service.updateCharacteristic(this.Characteristic.CurrentTemperature, device.lastEvents.temperature.value);
+
+                if (this.config['EveLoging'] as boolean) {
+                  if (now>added9Min) {
+                    accessoryObject.accessory.context.fakeGatoService.addEntry({
+                      time: Math.round(new Date().valueOf() / 1000), temp: device.lastEvents.temperature.value});
+                  }
+                }
               }
             }
 
@@ -135,8 +171,12 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
           }
         });
       });
+
+      this.lastUpdate = now;
+
     }, (this.config['UpdateTime'] as number) * 1000);
       
+    
   }
 
   configureAccessory(accessory: PlatformAccessory) {
@@ -156,6 +196,15 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
               const accessoryObject = this.getAccessory(device, 'switch');
               new SwitchAccessory(this, accessoryObject.accessory, device, this.config, this.log);
               this.addOrRestorAccessory(accessoryObject.accessory, device.name, 'switch', accessoryObject.exists);
+
+              if (device.lastEvents.power!==undefined) {
+                if (this.config['EveLoging'] as boolean === true) {
+                  const fakeGatoService = new this.FakeGatoHistoryService('energy', accessoryObject.accessory,
+                    {log: this.log, storage: 'fs', disableTimer:true});
+  
+                  accessoryObject.accessory.context.fakeGatoService = fakeGatoService;
+                }
+              }
             }
 
             if (device.lastEvents.notificationTwilight!==undefined) {
@@ -180,18 +229,39 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
               const accessoryObject = this.getAccessory(device, 'motion');
               new MotionAccessory(this, accessoryObject.accessory, device, this.config, this.log);
               this.addOrRestorAccessory(accessoryObject.accessory, device.name, 'motion', accessoryObject.exists);
+
+              if (this.config['EveLoging'] as boolean === true) {
+                const fakeGatoService = new this.FakeGatoHistoryService('motion', accessoryObject.accessory,
+                  {log: this.log, storage: 'fs', disableTimer:true});
+
+                accessoryObject.accessory.context.fakeGatoService = fakeGatoService;
+              }
             }
               
             if (device.lastEvents.humidity!==undefined) {
               const accessoryObject = this.getAccessory(device, 'humidity');
               new HumidityAccessory(this, accessoryObject.accessory, device, this.config, this.log);
               this.addOrRestorAccessory(accessoryObject.accessory, device.name, 'humidity', accessoryObject.exists);
+
+              if (this.config['EveLoging'] as boolean === true) {
+                const fakeGatoService = new this.FakeGatoHistoryService('room', accessoryObject.accessory,
+                  {log: this.log, storage: 'fs', disableTimer:true});
+
+                accessoryObject.accessory.context.fakeGatoService = fakeGatoService;
+              }
             }
 
             if (device.lastEvents.temperature!==undefined) {
               const accessoryObject = this.getAccessory(device, 'temperature');
               new ThermometerAccessory(this, accessoryObject.accessory, device, this.config, this.log);
               this.addOrRestorAccessory(accessoryObject.accessory, device.name, 'temperature', accessoryObject.exists);
+
+              if (this.config['EveLoging'] as boolean === true) {
+                const fakeGatoService = new this.FakeGatoHistoryService('room', accessoryObject.accessory,
+                  {log: this.log, storage: 'fs', disableTimer:true});
+
+                accessoryObject.accessory.context.fakeGatoService = fakeGatoService;
+              }
             }
 
             if (device.lastEvents.luminance!==undefined) {
