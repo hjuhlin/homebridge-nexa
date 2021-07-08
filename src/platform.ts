@@ -75,7 +75,10 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
 
                   if (this.config['EveLoging'] as boolean && this.update) {
                     accessoryObject.accessory.context.fakeGatoService.addEntry({
-                      time: Math.round(new Date().valueOf() / 1000), power: Math.round(power)});
+                      time: Math.round(new Date().valueOf() / 1000), 
+                      power: Math.round(power), 
+                      status: device.lastEvents.switchBinary.value,
+                    });
                   }
                 }
               }
