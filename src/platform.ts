@@ -70,6 +70,12 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
                   const power = device.lastEvents.power.value;
                   service.updateCharacteristic(this.customCharacteristic.characteristic.ElectricPower, power);
 
+                  const refresh = (this.config['UpdateTime'] as number);
+                  const totalenergy = accessoryObject.accessory.context.totalenergy + (power / (refresh * 60 * 60));
+                  service.updateCharacteristic(this.customCharacteristic.characteristic.TotalPowerConsumption, totalenergy);
+
+                  accessoryObject.accessory.context.totalenergy = totalenergy;
+
                   const powerConsumptionLimit = this.config['PowerConsumptionLimit'] as number;
                   service.updateCharacteristic(this.Characteristic.Active, power>powerConsumptionLimit);
 
@@ -77,7 +83,6 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
                     accessoryObject.accessory.context.fakeGatoService.addEntry({
                       time: Math.round(new Date().valueOf() / 1000), 
                       power: Math.round(power), 
-                      status: device.lastEvents.switchBinary.value,
                     });
                   }
                 }
@@ -199,7 +204,7 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
 
               if (device.lastEvents.power!==undefined) {
                 if (this.config['EveLoging'] as boolean === true) {
-                  const fakeGatoService = new this.FakeGatoHistoryService('energy', accessoryObject.accessory,
+                  const fakeGatoService = new this.FakeGatoHistoryService('custom', accessoryObject.accessory,
                     {log: this.log, storage: 'fs', disableTimer:true});
   
                   accessoryObject.accessory.context.fakeGatoService = fakeGatoService;
