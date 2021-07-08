@@ -60,6 +60,9 @@ This is a plugin for Nexa Bridge X (1.7 and forward).
 2.1.0, 2.1.1, 2.1.2, 2.1.3, 2.1.4, 2.1.5
 * Added support for CURRENT TotalPowerConsumption (lost at restart)
 
+2.2.0
+* Added support for TotalPowerConsumption (stored in file)
+
 Add issue for other devices/accessories you want support for
 
 # Default config

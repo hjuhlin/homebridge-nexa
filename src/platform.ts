@@ -28,6 +28,7 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
   private lastUpdate9min = new Date('2021-01-01');
   private update1min=false;
   private update9min=false;
+  private start = true;
 
   constructor(
     public readonly log: Logger,
@@ -81,18 +82,39 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
                   const powerConsumptionLimit = this.config['PowerConsumptionLimit'] as number;
                   service.updateCharacteristic(this.Characteristic.Active, power>powerConsumptionLimit);
 
-                  const now = new Date().getTime();
-                  const refresh = (now - accessoryObject.accessory.context.lastUpdated)/ 1000;
-                  const add = (power / ((60 * 60) / (refresh)));
-                  const totalenergy = accessoryObject.accessory.context.totalenergy + add/1000;
-                  accessoryObject.accessory.context.lastUpdated = now;
-                  accessoryObject.accessory.context.totalenergy = totalenergy;
-
                   if (this.config['EveLoging'] as boolean && this.update1min) {
+                    if (this.start===true) {
+                      if (accessoryObject.accessory.context.fakeGatoService!==undefined) {
+                        if (accessoryObject.accessory.context.fakeGatoService.isHistoryLoaded()) {
+                          const extraPersistedData = accessoryObject.accessory.context.fakeGatoService.getExtraPersistedData();
+              
+                          if (extraPersistedData !== undefined) {
+                            accessoryObject.accessory.context.totalenergy = extraPersistedData.totalenergy;
+                            this.log.info(device.name + ' - loading total energy from file ' +
+                           accessoryObject.accessory.context.totalenergy+' kWh');
+                          } else {
+                            this.log.warn(device.name + ' - starting new log for total energy in file!');
+                            accessoryObject.accessory.context.fakeGatoService.setExtraPersistedData({ totalenergy:0, lastReset: 0 });
+                          }
+                        } else {
+                          this.log.error(device.name + ' - history not loaded yet!');
+                        }
+                      }
+                    }
+
+                    const now = new Date().getTime();
+                    const refresh = (now - accessoryObject.accessory.context.lastUpdated)/ 1000;
+                    const add = (power / ((60 * 60) / (refresh)));
+                    const totalenergy = accessoryObject.accessory.context.totalenergy + add/1000;
+                    accessoryObject.accessory.context.lastUpdated = now;
+                    accessoryObject.accessory.context.totalenergy = totalenergy;
+
                     if (this.config['Debug'] as boolean) {
                       if (power>powerConsumptionLimit) {
-                        this.log.info(accessoryObject.accessory.displayName +': '+ totalenergy +
-                         ' kWh from '+accessoryObject.accessory.context.startTime);
+                        const totalenergyLog = Math.round(totalenergy* 100000) / 100000;
+
+                        this.log.info(accessoryObject.accessory.displayName +': '+ totalenergyLog +
+                         ' kWh from '+accessoryObject.accessory.context.startTime.toISOString());
                       }
                     }
                   
@@ -101,10 +123,15 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
                   }
 
                   if (this.config['EveLoging'] as boolean && this.update9min) {
-                    accessoryObject.accessory.context.fakeGatoService.addEntry({
-                      time: Math.round(new Date().valueOf() / 1000), 
-                      power: Math.round(power), 
-                    });
+                    if (accessoryObject.accessory.context.fakeGatoService!==undefined) {
+                      accessoryObject.accessory.context.fakeGatoService.setExtraPersistedData({
+                        totalenergy:accessoryObject.accessory.context.totalenergy});
+  
+                      accessoryObject.accessory.context.fakeGatoService.addEntry({
+                        time: Math.round(new Date().valueOf() / 1000), 
+                        power: Math.round(power), 
+                      });
+                    }
                   }
                 }
               }
@@ -196,6 +223,8 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
             }
           }
         });
+
+        this.start =false;
       });
 
       this.update1min= false;

@@ -75,8 +75,7 @@ export class SwitchAccessory {
   setResetTotal(value: CharacteristicValue, callback: CharacteristicSetCallback) {
     this.accessory.context.totalenergy = 0;
     this.accessory.context.lastReset = value;
-    this.accessory.context.fakeGatoService.setExtraPersistedData({ 
-      totalenergy: this.accessory.context.totalenergy, lastReset: this.accessory.context.lastReset });
+    this.accessory.context.fakeGatoService.setExtraPersistedData({ totalenergy: 0, lastReset: this.accessory.context.lastReset });
 
     callback(null);
   }
