@@ -37,15 +37,20 @@ export class SwitchAccessory {
 
       const powerConsumptionLimit = this.config['PowerConsumptionLimit'] as number;
       this.service.setCharacteristic(this.platform.Characteristic.Active, power>powerConsumptionLimit);
+
+      this.service.getCharacteristic(this.platform.customCharacteristic.characteristic.ResetTotal)
+        .on('set', this.setResetTotal.bind(this));  
+      
+      this.service.getCharacteristic(this.platform.customCharacteristic.characteristic.ResetTotal)
+        .on('get', this.getResetTotal.bind(this));  
+  
+      this.accessory.context.totalenergy = 0;
+      this.accessory.context.lastUpdated = new Date().getTime();
+      this.accessory.context.startTime = new Date();
+      this.accessory.context.lastReset = 0;
     }
 
     this.service.getCharacteristic(this.platform.Characteristic.On).on('set', this.setOn.bind(this));  
-
-    this.service.getCharacteristic(this.platform.customCharacteristic.characteristic.ResetTotal).on('set', this.setResetTotal.bind(this));  
-    this.service.getCharacteristic(this.platform.customCharacteristic.characteristic.ResetTotal).on('get', this.getResetTotal.bind(this));  
-
-    this.accessory.context.totalenergy = 0;
-    this.accessory.context.lastReset = 0;
   }
 
   setOn(value: CharacteristicValue, callback: CharacteristicSetCallback) {
@@ -54,15 +59,15 @@ export class SwitchAccessory {
       cap: 'switchBinary',
     };
 
+    const httpRequest = new HttpRequest(this.config, this.log);
+    httpRequest.Update(this.accessory.context.device.id, body);
+
     if (this.accessory.context.fakeGatoService!==undefined) {
       this.accessory.context.fakeGatoService.addEntry({
         time: Math.round(new Date().valueOf() / 1000), 
         status: value?1:0,
       });
     }
-
-    const httpRequest = new HttpRequest(this.config, this.log);
-    httpRequest.Update(this.accessory.context.device.id, body);
 
     callback(null);
   }

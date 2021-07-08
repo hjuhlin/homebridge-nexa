@@ -24,8 +24,10 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
   public customCharacteristic: CustomCharacteristic;
 
   private FakeGatoHistoryService;
-  private lastUpdate = new Date('2021-01-01');
-  private update =false;
+  private lastUpdate1min = new Date('2021-01-01');
+  private lastUpdate9min = new Date('2021-01-01');
+  private update1min=false;
+  private update9min=false;
 
   constructor(
     public readonly log: Logger,
@@ -50,11 +52,17 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
 
       httpRequest.GetStatusListForAll().then((results)=> {
         const now = new Date();
-        const added9Min = new Date(this.lastUpdate.getTime()+(9*60000));
+        const added1Min = new Date(this.lastUpdate1min.getTime()+(1*60000));
+        const added9Min = new Date(this.lastUpdate9min.getTime()+(9*60000));
   
+        if (now>added1Min) {
+          this.lastUpdate1min = now;
+          this.update1min = true;
+        }
+
         if (now>added9Min) {
-          this.lastUpdate = now;
-          this.update = true;
+          this.lastUpdate9min = now;
+          this.update9min = true;
         }
 
         (<NexaObject[]>results).forEach(device => {
@@ -73,22 +81,26 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
                   const powerConsumptionLimit = this.config['PowerConsumptionLimit'] as number;
                   service.updateCharacteristic(this.Characteristic.Active, power>powerConsumptionLimit);
 
-                  const refresh = (this.config['UpdateTime'] as number);
-                  const totalenergy = accessoryObject.accessory.context.totalenergy + (power / (refresh * 60 * 60) / 1000);
-                  const add = (power / (refresh * 60 * 60));
-                  service.updateCharacteristic(this.customCharacteristic.characteristic.TotalPowerConsumption, totalenergy);
-
-                  if (this.config['Debug'] as boolean) {
-                    if (power>powerConsumptionLimit) {
-                      this.log.info('Item', accessoryObject.accessory.displayName);
-                      this.log.info('Power: '+ power + ' Wh: '+add+' kWh: '+add/1000);
-                      this.log.info('TotalPowerConsumption kWh', totalenergy);
-                    }
-                  }
-
+                  const now = new Date().getTime();
+                  const refresh = (now - accessoryObject.accessory.context.lastUpdated)/ 1000;
+                  const add = (power / ((60 * 60) / (refresh)));
+                  const totalenergy = accessoryObject.accessory.context.totalenergy + add/1000;
+                  accessoryObject.accessory.context.lastUpdated = now;
                   accessoryObject.accessory.context.totalenergy = totalenergy;
 
-                  if (this.config['EveLoging'] as boolean && this.update) {
+                  if (this.config['EveLoging'] as boolean && this.update1min) {
+                    if (this.config['Debug'] as boolean) {
+                      if (power>powerConsumptionLimit) {
+                        this.log.info(accessoryObject.accessory.displayName +': '+ totalenergy +
+                         ' kWh from '+accessoryObject.accessory.context.startTime);
+                      }
+                    }
+                  
+                    service.updateCharacteristic(this.customCharacteristic.characteristic.TotalPowerConsumption, 
+                      accessoryObject.accessory.context.totalenergy);
+                  }
+
+                  if (this.config['EveLoging'] as boolean && this.update9min) {
                     accessoryObject.accessory.context.fakeGatoService.addEntry({
                       time: Math.round(new Date().valueOf() / 1000), 
                       power: Math.round(power), 
@@ -133,7 +145,7 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
               if (service!==undefined) {
                 service.updateCharacteristic(this.Characteristic.MotionDetected, device.lastEvents.notificationMotion.value);
 
-                if (this.config['EveLoging'] as boolean && this.update) {
+                if (this.config['EveLoging'] as boolean && this.update9min) {
                   accessoryObject.accessory.context.fakeGatoService.addEntry({
                     time: Math.round(new Date().valueOf() / 1000), power: device.lastEvents.notificationMotion.value});
                 }
@@ -161,7 +173,7 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
               if (service!==undefined) {
                 service.updateCharacteristic(this.Characteristic.CurrentTemperature, device.lastEvents.temperature.value);
 
-                if (this.config['EveLoging'] as boolean && this.update) {
+                if (this.config['EveLoging'] as boolean && this.update9min) {
                   accessoryObject.accessory.context.fakeGatoService.addEntry({
                     time: Math.round(new Date().valueOf() / 1000), temp: device.lastEvents.temperature.value});
                 }
@@ -186,7 +198,8 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
         });
       });
 
-      this.update= false;
+      this.update1min= false;
+      this.update9min= false;
 
     }, (this.config['UpdateTime'] as number) * 1000);
       
