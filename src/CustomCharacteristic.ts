@@ -22,7 +22,7 @@ export class CustomCharacteristic {
       format: Formats.FLOAT,
       minValue: 0,
       maxValue: 1000000000,
-      minStep: 0.1,
+      minStep: 0.00001,
       unit: 'kWh',
       description: 'Total Consumption in kWh',
       perms: [Perms.NOTIFY, Perms.PAIRED_READ],

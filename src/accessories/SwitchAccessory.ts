@@ -54,15 +54,17 @@ export class SwitchAccessory {
       cap: 'switchBinary',
     };
 
-    this.accessory.context.fakeGatoService.addEntry({
-      time: Math.round(new Date().valueOf() / 1000), 
-      status: value?1:0,
-    });
+    if (this.accessory.context.fakeGatoService!==undefined) {
+      this.accessory.context.fakeGatoService.addEntry({
+        time: Math.round(new Date().valueOf() / 1000), 
+        status: value?1:0,
+      });
+    }
 
     const httpRequest = new HttpRequest(this.config, this.log);
     httpRequest.Update(this.accessory.context.device.id, body);
 
-    callback(null, value);
+    callback(null);
   }
 
   setResetTotal(value: CharacteristicValue, callback: CharacteristicSetCallback) {
