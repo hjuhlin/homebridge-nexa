@@ -57,7 +57,7 @@ This is a plugin for Nexa Bridge X (1.7 and forward).
 2.0.0, 2.0.1, 2.0.2, 2.0.3
 * Added support for Eve statistics (problem with enery)
 
-2.1.0
+2.1.0, 2.1.1
 * Added support for CURRENT TotalPowerConsumption (lost at restart)
 
 Add issue for other devices/accessories you want support for
@@ -72,6 +72,7 @@ Add issue for other devices/accessories you want support for
         "ip": "192.168.0.X",
         "UpdateTime": 5,
         "EveLoging": false,
+        "Debug": false,
         "platform": "NexaBridgeX"
     }
 ]

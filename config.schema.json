@@ -52,6 +52,12 @@
         "type": "boolean",
         "required": false,
         "default": false
+      },
+      "Debug": {
+        "title": "View debug messages",
+        "type": "boolean",
+        "required": true,
+        "default": false
       }
     }
   }
