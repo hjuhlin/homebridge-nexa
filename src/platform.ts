@@ -67,7 +67,7 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
         }
 
         (<NexaObject[]>results).forEach(device => {
-          if (device.name !== undefined) {
+          if (device.name !== undefined && device.hideInApp===false) {
             if (device.lastEvents.switchBinary!==undefined) {
               const accessoryObject = this.getAccessory(device, 'switch');
               const service = accessoryObject.accessory.getService(this.Service.Switch);
@@ -246,7 +246,7 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
 
     httpRequest.GetStatusListForAll().then((results)=> {
       for (const device of (<NexaObject[]>results)) {
-        if (device.name !== undefined) {
+        if (device.name !== undefined && device.hideInApp===false) {
           if (device) {
             if (device.lastEvents.switchBinary!==undefined) {
               const accessoryObject = this.getAccessory(device, 'switch');
@@ -333,14 +333,15 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
         let found = false;
 
         for (const device of (<NexaObject[]>results)) {
-          if (accessory.UUID === this.localIdForType(device, 'switch') ||
+          if ((accessory.UUID === this.localIdForType(device, 'switch') ||
           accessory.UUID === this.localIdForType(device, 'twilight') ||
           accessory.UUID === this.localIdForType(device, 'contact')||
           accessory.UUID === this.localIdForType(device, 'button')||
           accessory.UUID === this.localIdForType(device, 'motion')||
           accessory.UUID === this.localIdForType(device, 'humidity')||
           accessory.UUID === this.localIdForType(device, 'temperature')||
-          accessory.UUID === this.localIdForType(device, 'luminance')) {
+          accessory.UUID === this.localIdForType(device, 'luminance')) &&
+          device.hideInApp===false) {
             found = true;
           }
         }

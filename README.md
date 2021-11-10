@@ -83,7 +83,12 @@ This is a plugin for Nexa Bridge X (1.7 and forward).
 - Added support for TotalPowerConsumption (stored in file)
 
   2.3.0
-  Changed Eve stats from 9 min to 10 min.
+
+- Changed Eve stats from 9 min to 10 min.
+
+  2.4.0
+
+- Hiding devices that are hidden in app
 
 Add issue for other devices/accessories you want support for
 
