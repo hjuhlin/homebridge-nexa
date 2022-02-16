@@ -2,7 +2,7 @@
   "private": false,
   "displayName": "Homebridge Nexa Bridge X",
   "name": "homebridge-nexabridgex",
-  "version": "2.4.0",
+  "version": "2.5.0",
   "description": "This is a plugin for Nexa Bridge X (1.7 and forward).",
   "license": "Apache-2.0",
   "repository": {

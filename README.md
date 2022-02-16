@@ -90,6 +90,10 @@ This is a plugin for Nexa Bridge X (1.7 and forward).
 
 - Hiding devices that are hidden in app
 
+  2.5.0
+
+- Trying to fix server crash if Nexa Brige is not found
+
 Add issue for other devices/accessories you want support for
 
 # Default config

@@ -118,3 +118,7 @@ dist
 .yarn/unplugged
 .yarn/build-state.yml
 .pnp.*
+.vs/homebridge-nexa/v17/.suo
+.vs/VSWorkspaceState.json
+.vs/slnx.sqlite
+.vs/slnx.sqlite

@@ -29,6 +29,8 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
   private update1min=false;
   private update10min=false;
   private start = true;
+  private pauseToTime = new Date();
+  private callingService = false;
 
   constructor(
     public readonly log: Logger,
@@ -49,7 +51,11 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
     this.log.debug('Finished initializing platform:', this.config.name);
 
     setInterval(() => {
+      if (this.pauseToTime<new Date() && this.callingService===false) {
+
       const httpRequest = new HttpRequest(this.config, log);
+
+      this.callingService = true;
 
       httpRequest.GetStatusListForAll().then((results)=> {
         const now = new Date();
@@ -224,15 +230,20 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
           }
         });
 
+        this.callingService = false;
         this.start =false;
+      
+      }).catch((error) => {
+        this.log.error('Unreachable - update', error);
+        this.callingService = false;
+        this.pauseToTime = new Date(new Date().getTime()+(1*60000));
       });
+    }
 
       this.update1min= false;
       this.update10min= false;
 
     }, (this.config['UpdateTime'] as number) * 1000);
-      
-    
   }
 
   configureAccessory(accessory: PlatformAccessory) {
@@ -243,6 +254,8 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
 
   discoverDevices() {
     const httpRequest = new HttpRequest(this.config, this.log);
+
+    this.callingService=true;
 
     httpRequest.GetStatusListForAll().then((results)=> {
       for (const device of (<NexaObject[]>results)) {
@@ -351,6 +364,11 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
           this.log.info('Removing existing accessory:', accessory.displayName);
         }
       });
+      this.callingService=false;
+
+    }).catch((error) => {
+      this.log.error('Unreachable - start up', error);
+      this.callingService=false;
     });
   }
 
