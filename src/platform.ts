@@ -53,192 +53,192 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
     setInterval(() => {
       if (this.pauseToTime<new Date() && this.callingService===false) {
 
-      const httpRequest = new HttpRequest(this.config, log);
+        const httpRequest = new HttpRequest(this.config, log);
 
-      this.callingService = true;
+        this.callingService = true;
 
-      httpRequest.GetStatusListForAll().then((results)=> {
-        const now = new Date();
-        const added1Min = new Date(this.lastUpdate1min.getTime()+(1*60000));
-        const added10Min = new Date(this.lastUpdate10min.getTime()+(10*60000));
+        httpRequest.GetStatusListForAll().then((results)=> {
+          const now = new Date();
+          const added1Min = new Date(this.lastUpdate1min.getTime()+(1*60000));
+          const added10Min = new Date(this.lastUpdate10min.getTime()+(10*60000));
   
-        if (now>added1Min) {
-          this.lastUpdate1min = now;
-          this.update1min = true;
-        }
+          if (now>added1Min) {
+            this.lastUpdate1min = now;
+            this.update1min = true;
+          }
 
-        if (now>added10Min) {
-          this.lastUpdate10min = now;
-          this.update10min = true;
-        }
+          if (now>added10Min) {
+            this.lastUpdate10min = now;
+            this.update10min = true;
+          }
 
-        (<NexaObject[]>results).forEach(device => {
-          if (device.name !== undefined && device.hideInApp===false) {
-            if (device.lastEvents.switchBinary!==undefined) {
-              const accessoryObject = this.getAccessory(device, 'switch');
-              const service = accessoryObject.accessory.getService(this.Service.Switch);
+          (<NexaObject[]>results).forEach(device => {
+            if (device.name !== undefined && device.hideInApp===false) {
+              if (device.lastEvents.switchBinary!==undefined) {
+                const accessoryObject = this.getAccessory(device, 'switch');
+                const service = accessoryObject.accessory.getService(this.Service.Switch);
 
-              if (service!==undefined) {
-                service.updateCharacteristic(this.Characteristic.On, device.lastEvents.switchBinary.value);
+                if (service!==undefined) {
+                  service.updateCharacteristic(this.Characteristic.On, device.lastEvents.switchBinary.value);
                
-                if (device.lastEvents.power!==undefined) {
-                  const power = device.lastEvents.power.value;
-                  service.updateCharacteristic(this.customCharacteristic.characteristic.ElectricPower, power);
+                  if (device.lastEvents.power!==undefined) {
+                    const power = device.lastEvents.power.value;
+                    service.updateCharacteristic(this.customCharacteristic.characteristic.ElectricPower, power);
 
-                  const powerConsumptionLimit = this.config['PowerConsumptionLimit'] as number;
-                  service.updateCharacteristic(this.Characteristic.Active, power>powerConsumptionLimit);
+                    const powerConsumptionLimit = this.config['PowerConsumptionLimit'] as number;
+                    service.updateCharacteristic(this.Characteristic.Active, power>powerConsumptionLimit);
 
-                  if (this.config['EveLoging'] as boolean && this.update1min) {
-                    if (this.start===true) {
-                      if (accessoryObject.accessory.context.fakeGatoService!==undefined) {
-                        if (accessoryObject.accessory.context.fakeGatoService.isHistoryLoaded()) {
-                          const extraPersistedData = accessoryObject.accessory.context.fakeGatoService.getExtraPersistedData();
+                    if (this.config['EveLoging'] as boolean && this.update1min) {
+                      if (this.start===true) {
+                        if (accessoryObject.accessory.context.fakeGatoService!==undefined) {
+                          if (accessoryObject.accessory.context.fakeGatoService.isHistoryLoaded()) {
+                            const extraPersistedData = accessoryObject.accessory.context.fakeGatoService.getExtraPersistedData();
               
-                          if (extraPersistedData !== undefined) {
-                            accessoryObject.accessory.context.totalenergy = extraPersistedData.totalenergy;
-                            this.log.info(device.name + ' - loading total energy from file ' +
+                            if (extraPersistedData !== undefined) {
+                              accessoryObject.accessory.context.totalenergy = extraPersistedData.totalenergy;
+                              this.log.info(device.name + ' - loading total energy from file ' +
                            accessoryObject.accessory.context.totalenergy+' kWh');
+                            } else {
+                              this.log.warn(device.name + ' - starting new log for total energy in file!');
+                              accessoryObject.accessory.context.fakeGatoService.setExtraPersistedData({ totalenergy:0, lastReset: 0 });
+                            }
                           } else {
-                            this.log.warn(device.name + ' - starting new log for total energy in file!');
-                            accessoryObject.accessory.context.fakeGatoService.setExtraPersistedData({ totalenergy:0, lastReset: 0 });
+                            this.log.error(device.name + ' - history not loaded yet!');
                           }
-                        } else {
-                          this.log.error(device.name + ' - history not loaded yet!');
                         }
                       }
+
+                      const now = new Date().getTime();
+                      const refresh = (now - accessoryObject.accessory.context.lastUpdated)/ 1000;
+                      const add = (power / ((60 * 60) / (refresh)));
+                      const totalenergy = accessoryObject.accessory.context.totalenergy + add/1000;
+                      accessoryObject.accessory.context.lastUpdated = now;
+                      accessoryObject.accessory.context.totalenergy = totalenergy;
+
+                      if (this.config['Debug'] as boolean) {
+                        if (power>powerConsumptionLimit) {
+                          const totalenergyLog = Math.round(totalenergy* 100000) / 100000;
+
+                          this.log.info(accessoryObject.accessory.displayName +': '+ totalenergyLog +
+                         ' kWh from '+accessoryObject.accessory.context.startTime.toISOString());
+                        }
+                      }
+                  
+                      service.updateCharacteristic(this.customCharacteristic.characteristic.TotalPowerConsumption, 
+                        accessoryObject.accessory.context.totalenergy);
                     }
 
-                    const now = new Date().getTime();
-                    const refresh = (now - accessoryObject.accessory.context.lastUpdated)/ 1000;
-                    const add = (power / ((60 * 60) / (refresh)));
-                    const totalenergy = accessoryObject.accessory.context.totalenergy + add/1000;
-                    accessoryObject.accessory.context.lastUpdated = now;
-                    accessoryObject.accessory.context.totalenergy = totalenergy;
-
-                    if (this.config['Debug'] as boolean) {
-                      if (power>powerConsumptionLimit) {
-                        const totalenergyLog = Math.round(totalenergy* 100000) / 100000;
-
-                        this.log.info(accessoryObject.accessory.displayName +': '+ totalenergyLog +
-                         ' kWh from '+accessoryObject.accessory.context.startTime.toISOString());
+                    if (this.config['EveLoging'] as boolean && this.update10min) {
+                      if (accessoryObject.accessory.context.fakeGatoService!==undefined) {
+                        accessoryObject.accessory.context.fakeGatoService.setExtraPersistedData({
+                          totalenergy:accessoryObject.accessory.context.totalenergy});
+  
+                        accessoryObject.accessory.context.fakeGatoService.addEntry({
+                          time: Math.round(new Date().valueOf() / 1000), 
+                          power: Math.round(power), 
+                        });
                       }
                     }
-                  
-                    service.updateCharacteristic(this.customCharacteristic.characteristic.TotalPowerConsumption, 
-                      accessoryObject.accessory.context.totalenergy);
                   }
+                }
+              }
+
+              if (device.lastEvents.notificationTwilight!==undefined) {
+                const accessoryObject = this.getAccessory(device, 'twilight');
+                const service = accessoryObject.accessory.getService(this.Service.LightSensor);
+
+                if (service!==undefined) {
+                  const isNight = device.lastEvents.notificationTwilight.value;
+                  service.updateCharacteristic(this.Characteristic.CurrentAmbientLightLevel, isNight ? 1: 100);
+                }
+              }
+
+              if (device.lastEvents.notificationContact!==undefined) {
+                const accessoryObject = this.getAccessory(device, 'contact');
+                const service = accessoryObject.accessory.getService(this.Service.ContactSensor);
+
+                if (service!==undefined) {
+                  service.updateCharacteristic(this.Characteristic.ContactSensorState, device.lastEvents.notificationContact.value);
+                }
+              }
+
+              if (device.lastEvents.notificationButton!==undefined) {
+                const accessoryObject = this.getAccessory(device, 'button');
+                const service = accessoryObject.accessory.getService(this.Service.ContactSensor);
+
+                if (service!==undefined) {
+                  service.updateCharacteristic(this.Characteristic.ContactSensorState, device.lastEvents.notificationButton.value);
+                }
+              }
+            
+              if (device.lastEvents.notificationMotion!==undefined) {
+                const accessoryObject = this.getAccessory(device, 'motion');
+                const service = accessoryObject.accessory.getService(this.Service.MotionSensor);
+
+                if (service!==undefined) {
+                  service.updateCharacteristic(this.Characteristic.MotionDetected, device.lastEvents.notificationMotion.value);
 
                   if (this.config['EveLoging'] as boolean && this.update10min) {
-                    if (accessoryObject.accessory.context.fakeGatoService!==undefined) {
-                      accessoryObject.accessory.context.fakeGatoService.setExtraPersistedData({
-                        totalenergy:accessoryObject.accessory.context.totalenergy});
-  
-                      accessoryObject.accessory.context.fakeGatoService.addEntry({
-                        time: Math.round(new Date().valueOf() / 1000), 
-                        power: Math.round(power), 
-                      });
-                    }
+                    accessoryObject.accessory.context.fakeGatoService.addEntry({
+                      time: Math.round(new Date().valueOf() / 1000), power: device.lastEvents.notificationMotion.value});
                   }
                 }
               }
-            }
-
-            if (device.lastEvents.notificationTwilight!==undefined) {
-              const accessoryObject = this.getAccessory(device, 'twilight');
-              const service = accessoryObject.accessory.getService(this.Service.LightSensor);
-
-              if (service!==undefined) {
-                const isNight = device.lastEvents.notificationTwilight.value;
-                service.updateCharacteristic(this.Characteristic.CurrentAmbientLightLevel, isNight ? 1: 100);
-              }
-            }
-
-            if (device.lastEvents.notificationContact!==undefined) {
-              const accessoryObject = this.getAccessory(device, 'contact');
-              const service = accessoryObject.accessory.getService(this.Service.ContactSensor);
-
-              if (service!==undefined) {
-                service.updateCharacteristic(this.Characteristic.ContactSensorState, device.lastEvents.notificationContact.value);
-              }
-            }
-
-            if (device.lastEvents.notificationButton!==undefined) {
-              const accessoryObject = this.getAccessory(device, 'button');
-              const service = accessoryObject.accessory.getService(this.Service.ContactSensor);
-
-              if (service!==undefined) {
-                service.updateCharacteristic(this.Characteristic.ContactSensorState, device.lastEvents.notificationButton.value);
-              }
-            }
-            
-            if (device.lastEvents.notificationMotion!==undefined) {
-              const accessoryObject = this.getAccessory(device, 'motion');
-              const service = accessoryObject.accessory.getService(this.Service.MotionSensor);
-
-              if (service!==undefined) {
-                service.updateCharacteristic(this.Characteristic.MotionDetected, device.lastEvents.notificationMotion.value);
-
-                if (this.config['EveLoging'] as boolean && this.update10min) {
-                  accessoryObject.accessory.context.fakeGatoService.addEntry({
-                    time: Math.round(new Date().valueOf() / 1000), power: device.lastEvents.notificationMotion.value});
-                }
-              }
-            }
               
-            if (device.lastEvents.humidity!==undefined) {
-              const accessoryObject = this.getAccessory(device, 'humidity');
-              const service = accessoryObject.accessory.getService(this.Service.HumiditySensor);
+              if (device.lastEvents.humidity!==undefined) {
+                const accessoryObject = this.getAccessory(device, 'humidity');
+                const service = accessoryObject.accessory.getService(this.Service.HumiditySensor);
 
-              if (service!==undefined) {
-                service.updateCharacteristic(this.Characteristic.CurrentRelativeHumidity, device.lastEvents.humidity.value);
+                if (service!==undefined) {
+                  service.updateCharacteristic(this.Characteristic.CurrentRelativeHumidity, device.lastEvents.humidity.value);
 
                 // if (this.config['EveLoging'] as boolean && this.update) {
                 //   accessoryObject.accessory.context.fakeGatoService.addEntry({
                 //     time: Math.round(new Date().valueOf() / 1000), humidity: device.lastEvents.humidity.value});
                 // }
+                }
               }
-            }
 
-            if (device.lastEvents.temperature!==undefined) {
-              const accessoryObject = this.getAccessory(device, 'temperature');
-              const service = accessoryObject.accessory.getService(this.Service.TemperatureSensor);
+              if (device.lastEvents.temperature!==undefined) {
+                const accessoryObject = this.getAccessory(device, 'temperature');
+                const service = accessoryObject.accessory.getService(this.Service.TemperatureSensor);
 
-              if (service!==undefined) {
-                service.updateCharacteristic(this.Characteristic.CurrentTemperature, device.lastEvents.temperature.value);
+                if (service!==undefined) {
+                  service.updateCharacteristic(this.Characteristic.CurrentTemperature, device.lastEvents.temperature.value);
 
-                if (this.config['EveLoging'] as boolean && this.update10min) {
-                  accessoryObject.accessory.context.fakeGatoService.addEntry({
-                    time: Math.round(new Date().valueOf() / 1000), temp: device.lastEvents.temperature.value});
+                  if (this.config['EveLoging'] as boolean && this.update10min) {
+                    accessoryObject.accessory.context.fakeGatoService.addEntry({
+                      time: Math.round(new Date().valueOf() / 1000), temp: device.lastEvents.temperature.value});
+                  }
+                }
+              }
+
+              if (device.lastEvents.luminance!==undefined) {
+                const accessoryObject = this.getAccessory(device, 'luminance');
+                const service = accessoryObject.accessory.getService(this.Service.LightSensor);
+
+                let luminance = device.lastEvents.luminance.value;
+
+                if (luminance===0) {
+                  luminance=0.1;
+                }
+
+                if (service!==undefined) {
+                  service.updateCharacteristic(this.Characteristic.CurrentAmbientLightLevel, luminance);
                 }
               }
             }
+          });
 
-            if (device.lastEvents.luminance!==undefined) {
-              const accessoryObject = this.getAccessory(device, 'luminance');
-              const service = accessoryObject.accessory.getService(this.Service.LightSensor);
-
-              let luminance = device.lastEvents.luminance.value;
-
-              if (luminance===0) {
-                luminance=0.1;
-              }
-
-              if (service!==undefined) {
-                service.updateCharacteristic(this.Characteristic.CurrentAmbientLightLevel, luminance);
-              }
-            }
-          }
-        });
-
-        this.callingService = false;
-        this.start =false;
+          this.callingService = false;
+          this.start =false;
       
-      }).catch((error) => {
-        this.log.error('Unreachable - update', error);
-        this.callingService = false;
-        this.pauseToTime = new Date(new Date().getTime()+(1*60000));
-      });
-    }
+        }).catch((error) => {
+          this.log.error('Unreachable - update', error);
+          this.callingService = false;
+          this.pauseToTime = new Date(new Date().getTime()+(1*60000));
+        });
+      }
 
       this.update1min= false;
       this.update10min= false;
