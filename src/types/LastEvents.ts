@@ -6,7 +6,9 @@ import { MethodCall } from './MethodCall';
 import { NotificationButton } from './NotificationButton';
 import { NotificationContact } from './NotificationContact';
 import { NotificationMotion } from './NotificationMotion';
+import { NotificationTamper } from './NotificationTamper';
 import { NotificationTwilight } from './NotificationTwilight';
+import { NotificationWater } from './NotificationWater';
 import { Power } from './Power';
 import { SwitchBinary } from './SwitchBinary';
 import { SwitchLevel } from './SwitchLevel';
@@ -21,6 +23,8 @@ export interface LastEvents {
     notificationButton: NotificationButton;
     notificationTwilight: NotificationTwilight;
     notificationMotion: NotificationMotion;
+    notificationWater: NotificationWater;
+    notificationTamper: NotificationTamper; 
     temperature: Temperature;
     humidity: Humidity;
     luminance: Luminance;

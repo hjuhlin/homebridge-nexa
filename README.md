@@ -94,6 +94,10 @@ This is a plugin for Nexa Bridge X (1.7 and forward).
 
 - Trying to fix server crash if Nexa Brige is not found
 
+  2.6.0
+
+- Added support for LeakSensor
+
 Add issue for other devices/accessories you want support for
 
 # Default config

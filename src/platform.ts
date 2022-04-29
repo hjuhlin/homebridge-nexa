@@ -13,6 +13,7 @@ import { ButtonAccessory } from './accessories/ButtonAccessory';
 import { ThermometerAccessory } from './accessories/ThermometerAccessory';
 import { HumidityAccessory } from './accessories/HumidityAccessory';
 import { LuminanceAccessory } from './accessories/LuminanceAccessory';
+import { LeakAccessory } from './accessories/LeakAccessory';
 import { CustomCharacteristic } from './CustomCharacteristic';
 
 import fakegato from 'fakegato-history';
@@ -153,6 +154,16 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
                 }
               }
 
+              if (device.lastEvents.notificationWater!==undefined) {
+                const accessoryObject = this.getAccessory(device, 'leak');
+                const service = accessoryObject.accessory.getService(this.Service.LeakSensor);
+
+                if (service!==undefined) {
+                  const leakDetected = device.lastEvents.notificationWater.value;
+                  service.updateCharacteristic(this.Characteristic.LeakDetected, leakDetected);
+                }
+              }
+
               if (device.lastEvents.notificationContact!==undefined) {
                 const accessoryObject = this.getAccessory(device, 'contact');
                 const service = accessoryObject.accessory.getService(this.Service.ContactSensor);
@@ -282,6 +293,12 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
               this.addOrRestorAccessory(accessoryObject.accessory, device.name, 'twilight', accessoryObject.exists);
             }
 
+            if (device.lastEvents.notificationWater!==undefined) {
+              const accessoryObject = this.getAccessory(device, 'leak');
+              new LeakAccessory(this, accessoryObject.accessory, device, this.config, this.log);
+              this.addOrRestorAccessory(accessoryObject.accessory, device.name, 'leak', accessoryObject.exists);
+            }
+
             if (device.lastEvents.notificationContact!==undefined) {
               const accessoryObject = this.getAccessory(device, 'contact');
               new ContactAccessory(this, accessoryObject.accessory, device, this.config, this.log);
@@ -353,6 +370,7 @@ export class NexaHomebridgePlatform implements DynamicPlatformPlugin {
           accessory.UUID === this.localIdForType(device, 'motion')||
           accessory.UUID === this.localIdForType(device, 'humidity')||
           accessory.UUID === this.localIdForType(device, 'temperature')||
+          accessory.UUID === this.localIdForType(device, 'leak')||
           accessory.UUID === this.localIdForType(device, 'luminance')) &&
           device.hideInApp===false) {
             found = true;
